@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAllSessionsQuery } from "@/features/training/queries"
 import { shouldSuggestDeload } from "@/features/readiness/types"
+import { addRecommendationIfMissing } from "@/lib/training-db"
 
 export function DeloadDetector() {
   const sessionsQuery = useAllSessionsQuery()
@@ -22,8 +23,6 @@ export function DeloadDetector() {
     if (!latestSession) {
       return
     }
-
-    const { addRecommendationIfMissing } = await import("@/lib/training-db")
 
     await addRecommendationIfMissing({
       date: latestSession.session.date,

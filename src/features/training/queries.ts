@@ -1,11 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  addRecommendationIfMissing,
+  getAllSessionsWithSets,
+  getLastSessionByWorkoutType,
+  getRecommendations,
+  getRecentSessionsByWorkoutType,
+  getSessionsByDateRange,
+  getSetting,
+  saveSessionWithSets,
+  setSetting,
+  softDeleteSession,
+  updateRecommendationStatus,
+  type SaveSessionInput,
+} from "@/lib/training-db"
 import type {
   RecommendationStatus,
   SplitType,
   WorkoutType,
 } from "@/lib/training-types"
-import type { SaveSessionInput } from "@/lib/training-db"
 import { buildProgressionSuggestion } from "@/features/training/rpe-utils"
+import { scheduleSync } from "@/lib/sync"
 
 const SESSIONS_QUERY_KEY = ["training-sessions"] as const
 const SETTINGS_QUERY_KEY = ["app-settings"] as const
@@ -20,7 +34,6 @@ export function useWeekSessionsQuery(startDateISO: string | undefined, endDateIS
         return []
       }
 
-      const { getSessionsByDateRange } = await import("@/lib/training-db")
       return getSessionsByDateRange(startDateISO, endDateISO)
     },
   })
@@ -29,20 +42,14 @@ export function useWeekSessionsQuery(startDateISO: string | undefined, endDateIS
 export function useAllSessionsQuery() {
   return useQuery({
     queryKey: [...SESSIONS_QUERY_KEY, "all"],
-    queryFn: async () => {
-      const { getAllSessionsWithSets } = await import("@/lib/training-db")
-      return getAllSessionsWithSets()
-    },
+    queryFn: getAllSessionsWithSets,
   })
 }
 
 export function useLastSessionQuery(workoutType: WorkoutType, splitType: SplitType) {
   return useQuery({
     queryKey: [...SESSIONS_QUERY_KEY, "last", splitType, workoutType],
-    queryFn: async () => {
-      const { getLastSessionByWorkoutType } = await import("@/lib/training-db")
-      return getLastSessionByWorkoutType(workoutType, splitType)
-    },
+    queryFn: async () => getLastSessionByWorkoutType(workoutType, splitType),
   })
 }
 
@@ -50,16 +57,8 @@ export function useAddSessionMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (payload: SaveSessionInput) => {
-      const { saveSessionWithSets } = await import("@/lib/training-db")
-      return saveSessionWithSets(payload)
-    },
+    mutationFn: async (payload: SaveSessionInput) => saveSessionWithSets(payload),
     onSuccess: async (_, variables) => {
-      const {
-        addRecommendationIfMissing,
-        getRecentSessionsByWorkoutType,
-      } = await import("@/lib/training-db")
-
       const recentSessions = await getRecentSessionsByWorkoutType(
         variables.session.workoutType,
         variables.session.splitType,
@@ -75,8 +74,6 @@ export function useAddSessionMutation() {
         queryClient.invalidateQueries({ queryKey: SESSIONS_QUERY_KEY }),
         queryClient.invalidateQueries({ queryKey: RECOMMENDATIONS_QUERY_KEY }),
       ])
-
-      const { scheduleSync } = await import("@/lib/sync")
       scheduleSync("mutation")
     },
   })
@@ -87,13 +84,10 @@ export function useDeleteSessionMutation() {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
-      const { softDeleteSession } = await import("@/lib/training-db")
       await softDeleteSession(sessionId)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: SESSIONS_QUERY_KEY })
-
-      const { scheduleSync } = await import("@/lib/sync")
       scheduleSync("mutation")
     },
   })
@@ -102,10 +96,7 @@ export function useDeleteSessionMutation() {
 export function useAppSettingQuery(key: "active-split" | "theme-preference") {
   return useQuery({
     queryKey: [...SETTINGS_QUERY_KEY, key],
-    queryFn: async () => {
-      const { getSetting } = await import("@/lib/training-db")
-      return getSetting(key)
-    },
+    queryFn: async () => getSetting(key),
   })
 }
 
@@ -114,7 +105,6 @@ export function useSetAppSettingMutation() {
 
   return useMutation({
     mutationFn: async (payload: { key: "active-split" | "theme-preference"; value: string }) => {
-      const { setSetting } = await import("@/lib/training-db")
       await setSetting(payload.key, payload.value)
     },
     onSuccess: async (_, variables) => {
@@ -122,8 +112,6 @@ export function useSetAppSettingMutation() {
         queryClient.invalidateQueries({ queryKey: [...SETTINGS_QUERY_KEY, variables.key] }),
         queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY }),
       ])
-
-      const { scheduleSync } = await import("@/lib/sync")
       scheduleSync("mutation")
     },
   })
@@ -132,10 +120,7 @@ export function useSetAppSettingMutation() {
 export function useRecommendationsQuery(status: RecommendationStatus | "all" = "pending") {
   return useQuery({
     queryKey: [...RECOMMENDATIONS_QUERY_KEY, status],
-    queryFn: async () => {
-      const { getRecommendations } = await import("@/lib/training-db")
-      return getRecommendations(status === "all" ? undefined : status)
-    },
+    queryFn: async () => getRecommendations(status === "all" ? undefined : status),
   })
 }
 
@@ -144,13 +129,10 @@ export function useRecommendationStatusMutation() {
 
   return useMutation({
     mutationFn: async (payload: { id: string; status: RecommendationStatus }) => {
-      const { updateRecommendationStatus } = await import("@/lib/training-db")
       await updateRecommendationStatus(payload.id, payload.status)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: RECOMMENDATIONS_QUERY_KEY })
-
-      const { scheduleSync } = await import("@/lib/sync")
       scheduleSync("mutation")
     },
   })

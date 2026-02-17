@@ -1,25 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import type { SaveReadinessInput } from "@/lib/training-db"
+import {
+  getLatestReadinessLog,
+  getReadinessLogsByDateRange,
+  saveReadinessLog,
+  type SaveReadinessInput,
+} from "@/lib/training-db"
+import { scheduleSync } from "@/lib/sync"
 
 const READINESS_QUERY_KEY = ["readiness"] as const
 
 export function useLatestReadinessQuery() {
   return useQuery({
     queryKey: [...READINESS_QUERY_KEY, "latest"],
-    queryFn: async () => {
-      const { getLatestReadinessLog } = await import("@/lib/training-db")
-      return getLatestReadinessLog()
-    },
+    queryFn: getLatestReadinessLog,
   })
 }
 
 export function useReadinessRangeQuery(startDateISO: string, endDateISO: string) {
   return useQuery({
     queryKey: [...READINESS_QUERY_KEY, "range", startDateISO, endDateISO],
-    queryFn: async () => {
-      const { getReadinessLogsByDateRange } = await import("@/lib/training-db")
-      return getReadinessLogsByDateRange(startDateISO, endDateISO)
-    },
+    queryFn: async () => getReadinessLogsByDateRange(startDateISO, endDateISO),
   })
 }
 
@@ -27,14 +27,9 @@ export function useSaveReadinessMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (payload: SaveReadinessInput) => {
-      const { saveReadinessLog } = await import("@/lib/training-db")
-      return saveReadinessLog(payload)
-    },
+    mutationFn: async (payload: SaveReadinessInput) => saveReadinessLog(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: READINESS_QUERY_KEY })
-
-      const { scheduleSync } = await import("@/lib/sync")
       scheduleSync("mutation")
     },
   })

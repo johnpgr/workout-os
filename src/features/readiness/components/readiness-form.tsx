@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useSaveReadinessMutation } from "@/features/readiness/queries"
 import { calculateReadinessScore } from "@/features/readiness/types"
 import { getCurrentDate } from "@/lib/temporal"
+import { addRecommendationIfMissing } from "@/lib/training-db"
 
 const SCALE_OPTIONS = [1, 2, 3, 4, 5]
 
@@ -73,7 +74,6 @@ export function ReadinessForm() {
     })
 
     if (readinessScore < 50) {
-      const { addRecommendationIfMissing } = await import("@/lib/training-db")
       await addRecommendationIfMissing({
         date,
         splitType: null,

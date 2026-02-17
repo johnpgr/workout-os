@@ -23,11 +23,11 @@ createRoot(document.getElementById("root")!).render(
         <SyncRuntimeBridge />
         <RouterProvider router={router} />
       </AuthProvider>
-      {ReactQueryDevtools ? (
+      {ReactQueryDevtools && (
         <Suspense fallback={null}>
           <ReactQueryDevtools initialIsOpen={false} />
         </Suspense>
-      ) : null}
+      )}
     </QueryClientProvider>
   </StrictMode>
 )

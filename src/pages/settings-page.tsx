@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select"
 import { checkStoragePersistence, useSyncStatus } from "@/lib/sync"
 import { getSplitConfig } from "@/features/training/splits/split-registry"
+import { getAllSessionsWithSets, getBackupSnapshot } from "@/lib/training-db"
 import type { SplitType } from "@/lib/training-types"
 import type { AppLayoutContextValue } from "@/layouts/app-layout"
 import { AuthContext } from "@/lib/auth-context-store"
@@ -80,7 +81,6 @@ export function SettingsPage() {
   }
 
   async function handleExportJson() {
-    const { getBackupSnapshot } = await import("@/lib/training-db")
     const snapshot = await getBackupSnapshot()
     downloadTextFile(
       `training-backup-${new Date().toISOString().slice(0, 10)}.json`,
@@ -90,7 +90,6 @@ export function SettingsPage() {
   }
 
   async function handleExportCsv() {
-    const { getAllSessionsWithSets } = await import("@/lib/training-db")
     const sessions = await getAllSessionsWithSets()
 
     const rows = [
@@ -145,7 +144,6 @@ export function SettingsPage() {
   }
 
   async function handleExportPdf() {
-    const { getBackupSnapshot } = await import("@/lib/training-db")
     const snapshot = await getBackupSnapshot()
 
     const totalSessions = snapshot.sessions.length
