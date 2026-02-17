@@ -1,6 +1,6 @@
-# Treinos PPL (React + Vite + shadcn/ui)
+# Workout
 
-App de treino PPL migrado do `index.html` legado para React com Tailwind e componentes shadcn/ui, mantendo:
+App de treino utilizando React com Tailwind e componentes shadcn/ui, mantendo:
 
 - plano Push / Pull / Legs
 - calendário semanal (modo 6x e 3x)
