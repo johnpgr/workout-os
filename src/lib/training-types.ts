@@ -39,6 +39,7 @@ export interface ExerciseSetLog extends SyncMetadata {
   date: string
   splitType: SplitType
   workoutType: WorkoutType
+  exerciseId: string | null
   exerciseName: string
   exerciseOrder: number
   setOrder: number

@@ -16,19 +16,57 @@ export type MuscleGroup =
   | "glutes"
   | "calves"
 
+export type PrimaryMuscle =
+  | "lats"
+  | "mid-back"
+  | "lower-back"
+  | "rear-delts"
+  | "front-delts"
+  | "side-delts"
+  | "traps"
+  | "pecs"
+  | "upper-pecs"
+  | "triceps-long-head"
+  | "triceps-lateral-head"
+  | "biceps-long-head"
+  | "biceps-short-head"
+  | "forearms"
+  | "quads-rectus-femoris"
+  | "quads-vastus"
+  | "hamstrings-biceps-femoris"
+  | "hamstrings-semitendinosus"
+  | "glutes-maximus"
+  | "glutes-medius"
+  | "calves-gastrocnemius"
+  | "calves-soleus"
+
 export type PlannedType = WorkoutType | "rest"
 export type WeekMode = "ppl-6" | "ppl-3" | "upper-lower-4"
 export type ThemePreference = "light" | "dark" | "system"
 
 export interface ExercisePlan {
+  exerciseId?: string | null
   name: string
   detail: string
   type: "COMPOSTO" | "ISOLAMENTO"
   muscleGroup: MuscleGroup
+  primaryMuscle?: PrimaryMuscle | null
+  youtubeUrl?: string | null
   setsReps: string
   defaultSets: number
   rest: string
   notes: string
+}
+
+export interface ExerciseCatalogItem {
+  id: string
+  name: string
+  detail: string
+  muscleGroup: MuscleGroup
+  primaryMuscle: PrimaryMuscle | null
+  youtubeUrl: string | null
+  isActive: boolean
+  sortOrder: number
 }
 
 export interface WorkoutPlan {
@@ -64,7 +102,9 @@ export interface SetLogInput {
 }
 
 export interface ExerciseInput {
+  exerciseId: string | null
   exerciseName: string
+  videoUrl: string
   sets: SetLogInput[]
 }
 
