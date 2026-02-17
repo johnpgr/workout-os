@@ -16,7 +16,7 @@ import { checkStoragePersistence, useSyncStatus } from "@/lib/sync"
 import { getSplitConfig } from "@/features/training/splits/split-registry"
 import { getAllSessionsWithSets, getBackupSnapshot } from "@/lib/training-db"
 import type { SplitType } from "@/lib/training-types"
-import type { AppLayoutContextValue } from "@/layouts/app-layout"
+import type { AppLayoutContextValue } from "@/routes/app-layout"
 import { AuthContext } from "@/lib/auth-context-store"
 
 function downloadTextFile(filename: string, content: string, mimeType: string) {
@@ -542,3 +542,5 @@ export function SettingsPage() {
     </section>
   )
 }
+
+export default SettingsPage

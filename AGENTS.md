@@ -1,10 +1,10 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/` holds app code. Entrypoints: `src/main.tsx`, `src/App.tsx`, `src/routes.tsx`.
-- `src/features/` is organized by domain (`training`, `progress`, `body-comp`, `readiness`) with local `components/`, `queries.ts`, and types/helpers.
-- `src/components/ui/` stores reusable UI primitives; `src/pages/` and `src/layouts/` hold route-level composition.
-- `src/lib/` contains shared infrastructure (Supabase client, sync, temporal/date helpers, auth context).
+- `app/` holds app code. Entrypoints: `app/root.tsx`, `app/routes.ts`.
+- `app/features/` is organized by domain (`training`, `progress`, `body-comp`, `readiness`) with local `components/`, `queries.ts`, and types/helpers.
+- `app/components/ui/` stores reusable UI primitives; `app/pages/` and `app/layouts/` hold route-level composition.
+- `app/lib/` contains shared infrastructure (Supabase client, sync, temporal/date helpers, auth context).
 - `supabase/migrations/` contains SQL migrations; `public/` holds static assets; `docs/` has product/domain notes; `dist/` is build output.
 
 ## Build, Test, and Development Commands
@@ -21,12 +21,12 @@
 - Formatting is enforced by `oxfmt` (`printWidth: 80`, `semi: false`); lint rules are in `.oxlintrc.json`.
 - Prefer small feature modules and colocate domain logic with the feature.
 - Use kebab-case for filenames (for example, `readiness-card.tsx`, `volume-utils.ts`).
-- Keep route components in `src/pages/` and shared primitives in `src/components/ui/`.
+- Keep route components in `app/pages/` and shared primitives in `app/components/ui/`.
 
 ## Architecture Overview
-- The app boots in `src/main.tsx`, wires providers (React Query/auth), and renders route-driven pages via `src/routes.tsx`.
-- Feature modules in `src/features/*` own UI, query logic, and types for each domain; pages compose these modules.
-- Persistence is split: local-first session/log data in IndexedDB helpers (`src/lib/training-db.ts`) and cloud sync/auth via Supabase (`src/lib/supabase.ts`, `src/lib/sync.ts`).
+- The app boots in `app/root.tsx`, wires providers (React Query/auth), and renders route-driven pages via `app/routes.ts`.
+- Feature modules in `app/features/*` own UI, query logic, and types for each domain; pages compose these modules.
+- Persistence is split: local-first session/log data in IndexedDB helpers (`app/lib/training-db.ts`) and cloud sync/auth via Supabase (`app/lib/supabase.ts`, `app/lib/sync.ts`).
 - SQL schema, RLS, and sync RPC changes must be versioned only through `supabase/migrations/`.
 
 ## Testing Guidelines

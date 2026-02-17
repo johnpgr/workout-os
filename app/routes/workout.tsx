@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+import {
+  createContext,
+  use,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 import { useOutletContext } from "react-router"
 import { WeeklyLogsCard } from "@/features/training/components/weekly-logs-card"
 import { WorkoutsSection } from "@/features/training/components/workouts-section"
@@ -17,9 +24,33 @@ import { getSplitConfig } from "@/features/training/splits/split-registry"
 import type { WeekMode, WeekSummary } from "@/features/training/types"
 import { getCurrentDate } from "@/lib/temporal"
 import type { SaveSessionInput, SessionWithSets } from "@/lib/training-db"
-import type { AppLayoutContextValue } from "@/layouts/app-layout"
+import type { AppLayoutContextValue } from "@/routes/app-layout"
 
-export function WorkoutPage() {
+interface WorkoutPageContextValue {
+  splitType: AppLayoutContextValue["splitType"]
+  workouts: ReturnType<typeof getSplitConfig>["workouts"]
+  availableModes: ReturnType<typeof getSplitConfig>["weekModes"]
+  effectiveMode: WeekMode
+  todayISO: string
+  weekDates: ReturnType<typeof getWeekDates>
+  selectedDate: string
+  selectedLogs: SessionWithSets[]
+  summary: WeekSummary
+  logsByDate: Map<string, SessionWithSets[]>
+  isLogsLoading: boolean
+  logsErrorMessage: string | null
+  isSavingSession: boolean
+  isDeletingLog: boolean
+  setWeekValue: (value: string) => void
+  setMode: (mode: WeekMode) => void
+  setSelectedDate: (date: string) => void
+  saveSession: (payload: SaveSessionInput) => Promise<void>
+  deleteSession: (id: string) => Promise<void>
+}
+
+const WorkoutPageContext = createContext<WorkoutPageContextValue>({} as WorkoutPageContextValue)
+
+function WorkoutPageProvider({ children }: { children: ReactNode }) {
   const { splitType } = useOutletContext<AppLayoutContextValue>()
 
   const splitConfig = getSplitConfig(splitType)
@@ -64,7 +95,8 @@ export function WorkoutPage() {
       accumulator.totalSessions += 1
       accumulator.totalMinutes += Number(entry.session.durationMin || 0)
       const type = entry.session.workoutType
-      accumulator.byWorkoutType[type] = (accumulator.byWorkoutType[type] ?? 0) + 1
+      accumulator.byWorkoutType[type] =
+        (accumulator.byWorkoutType[type] ?? 0) + 1
       return accumulator
     },
     {
@@ -75,7 +107,9 @@ export function WorkoutPage() {
   )
 
   useEffect(() => {
-    const currentWeekDates = getWeekDates(weekValue).map((day) => toISODateString(day))
+    const currentWeekDates = getWeekDates(weekValue).map((day) =>
+      toISODateString(day)
+    )
 
     if (!currentWeekDates.length) {
       return
@@ -97,7 +131,7 @@ export function WorkoutPage() {
     })
   }, [weekValue])
 
-  async function handleSaveSession(payload: SaveSessionInput) {
+  async function saveSession(payload: SaveSessionInput) {
     await addSessionMutation.mutateAsync(payload)
 
     preferredDateRef.current = payload.session.date
@@ -112,7 +146,7 @@ export function WorkoutPage() {
     setSelectedDate(payload.session.date)
   }
 
-  async function handleDeleteSession(id: string) {
+  async function deleteSession(id: string) {
     if (!window.confirm("Excluir esta sessão?")) {
       return
     }
@@ -129,32 +163,103 @@ export function WorkoutPage() {
     ? "Não foi possível carregar os registros desta semana."
     : null
 
-  return (
-    <section className="space-y-6">
-      <WeeklyLogsCard
-        mode={effectiveMode}
-        availableModes={splitConfig.weekModes}
-        weekDates={weekDates}
-        selectedDate={selectedDate}
-        selectedLogs={selectedLogs}
-        summary={summary}
-        logsByDate={logsByDate}
-        isLogsLoading={weekSessionsQuery.isPending}
-        logsErrorMessage={logsErrorMessage}
-        isDeletingLog={deleteSessionMutation.isPending}
-        onWeekValueChange={setWeekValue}
-        onModeChange={setMode}
-        onSelectedDateChange={setSelectedDate}
-        onDeleteLog={handleDeleteSession}
-      />
+  const value: WorkoutPageContextValue = {
+    splitType,
+    workouts: splitConfig.workouts,
+    availableModes: splitConfig.weekModes,
+    effectiveMode,
+    todayISO,
+    weekDates,
+    selectedDate,
+    selectedLogs,
+    summary,
+    logsByDate,
+    isLogsLoading: weekSessionsQuery.isPending,
+    logsErrorMessage,
+    isSavingSession: addSessionMutation.isPending,
+    isDeletingLog: deleteSessionMutation.isPending,
+    setWeekValue,
+    setMode,
+    setSelectedDate,
+    saveSession,
+    deleteSession,
+  }
 
-      <WorkoutsSection
-        defaultDate={selectedDate || todayISO}
-        splitType={splitType}
-        workouts={splitConfig.workouts}
-        isSaving={addSessionMutation.isPending}
-        onSaveSession={handleSaveSession}
-      />
-    </section>
+  return (
+    <WorkoutPageContext.Provider value={value}>
+      {children}
+    </WorkoutPageContext.Provider>
   )
 }
+
+function WorkoutPageLogsSection() {
+  const {
+    effectiveMode,
+    availableModes,
+    weekDates,
+    selectedDate,
+    selectedLogs,
+    summary,
+    logsByDate,
+    isLogsLoading,
+    logsErrorMessage,
+    isDeletingLog,
+    setWeekValue,
+    setMode,
+    setSelectedDate,
+    deleteSession,
+  } = use(WorkoutPageContext)
+
+  return (
+    <WeeklyLogsCard
+      mode={effectiveMode}
+      availableModes={availableModes}
+      weekDates={weekDates}
+      selectedDate={selectedDate}
+      selectedLogs={selectedLogs}
+      summary={summary}
+      logsByDate={logsByDate}
+      isLogsLoading={isLogsLoading}
+      logsErrorMessage={logsErrorMessage}
+      isDeletingLog={isDeletingLog}
+      onWeekValueChange={setWeekValue}
+      onModeChange={setMode}
+      onSelectedDateChange={setSelectedDate}
+      onDeleteLog={deleteSession}
+    />
+  )
+}
+
+function WorkoutPageFormsSection() {
+  const {
+    selectedDate,
+    todayISO,
+    splitType,
+    workouts,
+    isSavingSession,
+    saveSession,
+  } = use(WorkoutPageContext)
+
+  return (
+    <WorkoutsSection
+      defaultDate={selectedDate || todayISO}
+      splitType={splitType}
+      workouts={workouts}
+      isSaving={isSavingSession}
+      onSaveSession={saveSession}
+    />
+  )
+}
+
+export function WorkoutPage() {
+  return (
+    <WorkoutPageProvider>
+      <section className="space-y-6">
+        <WorkoutPageLogsSection />
+        <WorkoutPageFormsSection />
+      </section>
+    </WorkoutPageProvider>
+  )
+}
+
+export default WorkoutPage

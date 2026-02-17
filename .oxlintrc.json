@@ -9,6 +9,8 @@
   },
   "ignorePatterns": [
     "dist",
+    "build",
+    "react-router-framework/**",
     ".agents/**",
     ".claude/**"
   ],
@@ -133,6 +135,14 @@
       "plugins": [
         "react"
       ]
+    },
+    {
+      "files": [
+        "app/**/*.tsx"
+      ],
+      "rules": {
+        "react/only-export-components": "off"
+      }
     },
     {
       "files": [

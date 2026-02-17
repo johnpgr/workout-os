@@ -4,14 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "typecheck": "tsc -b",
-    "build": "tsc -b && vite build",
+    "dev": "react-router dev",
+    "typecheck": "react-router typegen && tsc -b",
+    "build": "react-router build",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
-    "preview": "vite preview"
+    "preview": "vite preview --outDir build/client"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
@@ -19,12 +19,14 @@
     "@hookform/resolvers": "^5.2.2",
     "@js-temporal/polyfill": "^0.5.1",
     "@phosphor-icons/react": "^2.1.10",
+    "@react-router/node": "^7.13.0",
     "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/vite": "^4.1.17",
     "@tanstack/react-query": "^5.90.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dexie": "^4.3.0",
+    "isbot": "^5.1.35",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
@@ -39,6 +41,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@react-router/dev": "^7.13.0",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",

@@ -104,3 +104,5 @@ export function AppLayout() {
     </main>
   )
 }
+
+export default AppLayout

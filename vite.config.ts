@@ -1,29 +1,16 @@
-import path from "path"
 import tailwindcss from "@tailwindcss/vite"
-import react from "@vitejs/plugin-react"
+import { reactRouter } from "@react-router/dev/vite"
+import path from "path"
 import { defineConfig } from "vite"
 
-const repositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1]
-const isUserSite = repositoryName?.toLowerCase().endsWith(".github.io")
-
-const githubPagesBase =
-  process.env.GITHUB_ACTIONS === "true" && repositoryName && !isUserSite
-    ? `/${repositoryName}/`
-    : "/"
-
 export default defineConfig({
-  base: githubPagesBase,
   plugins: [
-    react({
-      babel: {
-        plugins: [["babel-plugin-react-compiler"]],
-      },
-    }),
     tailwindcss(),
+    reactRouter(),
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "./app"),
     },
   },
   build: {

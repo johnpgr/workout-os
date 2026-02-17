@@ -45,3 +45,5 @@ export function ProgressPage() {
     </section>
   )
 }
+
+export default ProgressPage

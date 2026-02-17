@@ -69,3 +69,5 @@ export function AuthCallbackPage() {
     </main>
   )
 }
+
+export default AuthCallbackPage
