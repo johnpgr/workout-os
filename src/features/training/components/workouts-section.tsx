@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ClockCountdownIcon } from "@phosphor-icons/react"
 import { Controller, useFieldArray, useForm, type Control } from "react-hook-form"
@@ -16,6 +16,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { SetRowInput } from "@/features/training/components/set-row-input"
+import { WORKOUT_TERMS_HELP_SEEN_KEY } from "@/features/training/constants"
 import {
   createWorkoutFormDefaultValues,
   type WorkoutFormValues,
@@ -51,11 +52,13 @@ interface WorkoutCardFormProps {
 interface ExerciseSetRowsProps {
   control: Control<WorkoutFormValues>
   exerciseIndex: number
+  autoOpenRpeHelp: boolean
 }
 
 function ExerciseSetRows({
   control,
   exerciseIndex,
+  autoOpenRpeHelp,
 }: ExerciseSetRowsProps) {
   const setArrayName = `exercises.${exerciseIndex}.sets` as const
 
@@ -74,6 +77,7 @@ function ExerciseSetRows({
           control={control}
           onRemove={() => setsFieldArray.remove(setIndex)}
           canRemove={setsFieldArray.fields.length > 1}
+          autoOpenRpeHelp={autoOpenRpeHelp && setIndex === 0}
         />
       ))}
 
@@ -123,6 +127,21 @@ function WorkoutCardForm({
   onSaveSession,
 }: WorkoutCardFormProps) {
   const [status, setStatus] = useState<FormStatus>(null)
+  const [shouldAutoOpenRpeHelp, setShouldAutoOpenRpeHelp] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const hasSeenHelp = window.localStorage.getItem(WORKOUT_TERMS_HELP_SEEN_KEY)
+    if (hasSeenHelp) {
+      return
+    }
+
+    window.localStorage.setItem(WORKOUT_TERMS_HELP_SEEN_KEY, "1")
+    setShouldAutoOpenRpeHelp(true)
+  }, [])
 
   const form = useForm<WorkoutFormValues>({
     resolver: zodResolver(workoutFormSchema),
@@ -357,6 +376,9 @@ function WorkoutCardForm({
                 <ExerciseSetRows
                   control={control}
                   exerciseIndex={exerciseIndex}
+                  autoOpenRpeHelp={
+                    shouldAutoOpenRpeHelp && exerciseIndex === 0
+                  }
                 />
               </section>
             ))}
