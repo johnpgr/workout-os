@@ -1,4 +1,4 @@
-# Workout
+# Workout OS
 
 App de treino utilizando React com Tailwind e componentes shadcn/ui, mantendo:
 
