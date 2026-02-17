@@ -586,10 +586,24 @@ function WorkoutCardForm({
                           : exerciseTemplate.detail}
                       </p>
                     </div>
-                    <Badge variant="outline">{exerciseTemplate.setsReps}</Badge>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Badge variant="outline">{exerciseTemplate.setsReps}</Badge>
+                      {exerciseValue?.videoUrl ? (
+                        <a
+                          href={exerciseValue.videoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Ver execução de ${exerciseValue.exerciseName}`}
+                          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          Ver execução
+                          <ArrowSquareOutIcon className="size-4" aria-hidden="true" />
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
 
-                  <div className="mb-3 grid gap-3 md:grid-cols-[2fr_1fr]">
+                  <div className="mb-3">
                     <Controller
                       name={fieldPath}
                       control={control}
@@ -652,29 +666,6 @@ function WorkoutCardForm({
                         </Field>
                       )}
                     />
-
-                    {exerciseValue?.videoUrl ? (
-                      <Field className="space-y-1.5">
-                        <FieldLabel className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                          Execução
-                        </FieldLabel>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-11 w-full justify-between"
-                          onClick={() => {
-                            window.open(
-                              exerciseValue.videoUrl,
-                              "_blank",
-                              "noopener,noreferrer",
-                            )
-                          }}
-                        >
-                          Assistir execução
-                          <ArrowSquareOutIcon className="size-4" aria-hidden="true" />
-                        </Button>
-                      </Field>
-                    ) : null}
                   </div>
 
                   <ExerciseSetRows
