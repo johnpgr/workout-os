@@ -39,7 +39,7 @@ export function AppHeader({ splitType, themePreference, onThemePreferenceChange 
         </div>
       </div>
 
-      <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Training OS v1</h1>
+      <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Workout OS v1</h1>
 
       <nav className="mx-auto flex max-w-xl flex-wrap items-center justify-center gap-2">
         <NavLink to="/" className={({ isActive }) => navClassName(isActive)} end>

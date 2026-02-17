@@ -1,5 +1,7 @@
-import { use, useEffect, useMemo, useState } from "react"
+import { use, useEffect, useMemo, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 import { useOutletContext } from "react-router"
+import { useReactToPrint } from "react-to-print"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -29,6 +31,47 @@ function downloadTextFile(filename: string, content: string, mimeType: string) {
   URL.revokeObjectURL(url)
 }
 
+type BackupSnapshot = Awaited<ReturnType<typeof getBackupSnapshot>>
+
+interface TrainingReportData {
+  generatedAt: string
+  totalSessions: number
+  totalSets: number
+  totalReadiness: number
+  totalWeightEntries: number
+  recentSessions: {
+    date: string
+    splitType: string
+    workoutLabel: string
+    durationMin: number
+    setCount: number
+  }[]
+}
+
+function createTrainingReportData(
+  snapshot: BackupSnapshot,
+): TrainingReportData {
+  const totalSets = snapshot.sessions.reduce(
+    (sum, session) => sum + session.sets.length,
+    0,
+  )
+
+  return {
+    generatedAt: new Date().toLocaleString(),
+    totalSessions: snapshot.sessions.length,
+    totalSets,
+    totalReadiness: snapshot.readinessLogs.length,
+    totalWeightEntries: snapshot.weightLogs.length,
+    recentSessions: snapshot.sessions.slice(0, 12).map((entry) => ({
+      date: entry.session.date,
+      splitType: entry.session.splitType,
+      workoutLabel: entry.session.workoutLabel,
+      durationMin: entry.session.durationMin,
+      setCount: entry.sets.length,
+    })),
+  }
+}
+
 export function SettingsPage() {
   const { splitType, setSplitType } = useOutletContext<AppLayoutContextValue>()
   const { user, isAuthenticated, isLoading, signInWithMagicLink, signOut } =
@@ -46,8 +89,14 @@ export function SettingsPage() {
 
   const [email, setEmail] = useState("")
   const [authStatus, setAuthStatus] = useState<string | null>(null)
+  const [reportData, setReportData] = useState<TrainingReportData | null>(null)
+  const printReportRef = useRef<HTMLDivElement>(null)
 
   const splitLabel = useMemo(() => getSplitConfig(splitType).label, [splitType])
+  const printReport = useReactToPrint({
+    contentRef: printReportRef,
+    documentTitle: `training-report-${new Date().toISOString().slice(0, 10)}`,
+  })
 
   useEffect(() => {
     void checkStoragePersistence()
@@ -146,80 +195,10 @@ export function SettingsPage() {
   async function handleExportPdf() {
     const snapshot = await getBackupSnapshot()
 
-    const totalSessions = snapshot.sessions.length
-    const totalSets = snapshot.sessions.reduce(
-      (sum, session) => sum + session.sets.length,
-      0,
-    )
-    const totalReadiness = snapshot.readinessLogs.length
-    const totalWeightEntries = snapshot.weightLogs.length
-
-    const popup = window.open("", "_blank", "width=1000,height=800")
-    if (!popup) {
-      return
-    }
-
-    popup.document.write(`
-      <html>
-        <head>
-          <title>Training Report</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
-            h1 { margin-bottom: 6px; }
-            .muted { color: #555; margin-top: 0; }
-            .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
-            .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background: #f8f8f8; }
-          </style>
-        </head>
-        <body>
-          <h1>Training App Report</h1>
-          <p class="muted">Generated at ${new Date().toLocaleString()}</p>
-
-          <div class="grid">
-            <div class="card"><strong>Total sessions</strong><div>${totalSessions}</div></div>
-            <div class="card"><strong>Total set logs</strong><div>${totalSets}</div></div>
-            <div class="card"><strong>Readiness check-ins</strong><div>${totalReadiness}</div></div>
-            <div class="card"><strong>Weight entries</strong><div>${totalWeightEntries}</div></div>
-          </div>
-
-          <h2>Recent Sessions</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Split</th>
-                <th>Workout</th>
-                <th>Duration</th>
-                <th>Sets</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${snapshot.sessions
-                .slice(0, 12)
-                .map(
-                  (entry) => `
-                    <tr>
-                      <td>${entry.session.date}</td>
-                      <td>${entry.session.splitType}</td>
-                      <td>${entry.session.workoutLabel}</td>
-                      <td>${entry.session.durationMin} min</td>
-                      <td>${entry.sets.length}</td>
-                    </tr>
-                  `,
-                )
-                .join("")}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `)
-
-    popup.document.close()
-    popup.focus()
-    popup.print()
+    flushSync(() => {
+      setReportData(createTrainingReportData(snapshot))
+    })
+    printReport()
   }
 
   return (
@@ -368,6 +347,196 @@ export function SettingsPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          left: "-10000px",
+          top: 0,
+          width: "210mm",
+          background: "#fff",
+        }}
+      >
+        <div
+          ref={printReportRef}
+          style={{
+            padding: "24px",
+            color: "#111",
+            fontFamily: "Arial, sans-serif",
+          }}
+        >
+          <h1 style={{ marginBottom: "6px" }}>Training App Report</h1>
+          <p style={{ color: "#555", marginTop: 0 }}>
+            Generated at {reportData?.generatedAt ?? "-"}
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: "12px",
+              margin: "18px 0",
+            }}
+          >
+            <div
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                padding: "12px",
+              }}
+            >
+              <strong>Total sessions</strong>
+              <div>{reportData?.totalSessions ?? 0}</div>
+            </div>
+            <div
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                padding: "12px",
+              }}
+            >
+              <strong>Total set logs</strong>
+              <div>{reportData?.totalSets ?? 0}</div>
+            </div>
+            <div
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                padding: "12px",
+              }}
+            >
+              <strong>Readiness check-ins</strong>
+              <div>{reportData?.totalReadiness ?? 0}</div>
+            </div>
+            <div
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                padding: "12px",
+              }}
+            >
+              <strong>Weight entries</strong>
+              <div>{reportData?.totalWeightEntries ?? 0}</div>
+            </div>
+          </div>
+
+          <h2>Recent Sessions</h2>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginTop: "16px",
+            }}
+          >
+            <thead>
+              <tr>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "left",
+                    background: "#f8f8f8",
+                  }}
+                >
+                  Date
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "left",
+                    background: "#f8f8f8",
+                  }}
+                >
+                  Split
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "left",
+                    background: "#f8f8f8",
+                  }}
+                >
+                  Workout
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "left",
+                    background: "#f8f8f8",
+                  }}
+                >
+                  Duration
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "left",
+                    background: "#f8f8f8",
+                  }}
+                >
+                  Sets
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {(reportData?.recentSessions ?? []).map((entry, index) => (
+                <tr key={`${entry.date}-${entry.workoutLabel}-${index}`}>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "left",
+                    }}
+                  >
+                    {entry.date}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "left",
+                    }}
+                  >
+                    {entry.splitType}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "left",
+                    }}
+                  >
+                    {entry.workoutLabel}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "left",
+                    }}
+                  >
+                    {entry.durationMin} min
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "left",
+                    }}
+                  >
+                    {entry.setCount}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
   )
 }
