@@ -7,14 +7,14 @@ import type { SplitConfig } from "@/features/training/types"
 
 export const UPPER_LOWER_SPLIT: SplitConfig = {
   type: "upper-lower",
-  label: "Upper / Lower",
+  label: "Superior / Inferior",
   weekModes: ["upper-lower-4"],
   workouts: [
     {
       splitType: "upper-lower",
       type: "upper-a",
-      label: "Upper A",
-      title: "Upper A (Tensão)",
+      label: "Superior A",
+      title: "Superior A (Tensão)",
       icon: BarbellIcon,
       badge: "FORÇA / COMPOSTOS",
       focus: "strength",
@@ -75,8 +75,8 @@ export const UPPER_LOWER_SPLIT: SplitConfig = {
     {
       splitType: "upper-lower",
       type: "lower-a",
-      label: "Lower A",
-      title: "Lower A (Tensão)",
+      label: "Inferior A",
+      title: "Inferior A (Tensão)",
       icon: PersonSimpleRunIcon,
       badge: "FORÇA / COMPOSTOS",
       focus: "strength",
@@ -127,8 +127,8 @@ export const UPPER_LOWER_SPLIT: SplitConfig = {
     {
       splitType: "upper-lower",
       type: "upper-b",
-      label: "Upper B",
-      title: "Upper B (Volume)",
+      label: "Superior B",
+      title: "Superior B (Volume)",
       icon: ArrowsClockwiseIcon,
       badge: "HIPERTROFIA",
       focus: "hypertrophy",
@@ -189,8 +189,8 @@ export const UPPER_LOWER_SPLIT: SplitConfig = {
     {
       splitType: "upper-lower",
       type: "lower-b",
-      label: "Lower B",
-      title: "Lower B (Volume)",
+      label: "Inferior B",
+      title: "Inferior B (Volume)",
       icon: PersonSimpleRunIcon,
       badge: "HIPERTROFIA",
       focus: "hypertrophy",

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ClockCountdownIcon } from "@phosphor-icons/react"
 import { useFieldArray, useForm, type Control, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from "react-hook-form"
@@ -109,7 +109,7 @@ function parseNonNegativeNumber(value: string): number {
 function getSessionSummaryText(session: SessionWithSets): string {
   const totalSets = session.sets.length
   const volumeLoad = session.sets.reduce((total, set) => total + set.weightKg * set.reps, 0)
-  return `${formatISOToBR(session.session.date)} · ${totalSets} séries · ${Math.round(volumeLoad)} kg volume`
+  return `${formatISOToBR(session.session.date)} · ${totalSets} séries · ${Math.round(volumeLoad)} kg de carga`
 }
 
 function WorkoutCardForm({
@@ -136,13 +136,7 @@ function WorkoutCardForm({
     reset(createWorkoutFormDefaultValues(defaultDate, workout))
   }, [defaultDate, workout, reset])
 
-  const summaryText = useMemo(() => {
-    if (!lastSession) {
-      return null
-    }
-
-    return getSessionSummaryText(lastSession)
-  }, [lastSession])
+  const summaryText = lastSession ? getSessionSummaryText(lastSession) : null
 
   async function onSubmit(values: WorkoutFormValues) {
     const sets = values.exercises.flatMap((exercise, exerciseIndex) => {

@@ -79,8 +79,8 @@ export function ReadinessForm() {
         splitType: null,
         workoutType: null,
         kind: "reduce-intensity",
-        message: "Readiness baixo hoje. Considere reduzir intensidade em 5-10%.",
-        reason: "Score de readiness < 50.",
+        message: "Prontidão baixa hoje. Considere reduzir intensidade em 5-10%.",
+        reason: "Pontuação de prontidão < 50.",
       })
     }
   }
@@ -88,7 +88,7 @@ export function ReadinessForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Check-in de Readiness</CardTitle>
+        <CardTitle className="text-lg">Registro de Prontidão</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
@@ -134,7 +134,7 @@ export function ReadinessForm() {
           </div>
 
           <Button type="submit" disabled={mutation.isPending}>
-            Salvar readiness
+            Salvar prontidão
           </Button>
         </form>
       </CardContent>

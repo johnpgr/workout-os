@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Outlet } from "react-router"
 import { AppFooter } from "@/features/training/components/app-footer"
 import { AppHeader } from "@/features/training/components/app-header"
 import { BottomNav } from "@/features/training/components/bottom-nav"
 import { THEME_STORAGE_KEY } from "@/features/training/constants"
-import {
-  getInitialThemePreference,
-} from "@/features/training/helpers"
+import { getInitialThemePreference } from "@/features/training/helpers"
 import {
   useAppSettingQuery,
   useSetAppSettingMutation,
@@ -23,9 +21,12 @@ export function AppLayout() {
   const activeSplitQuery = useAppSettingQuery("active-split")
   const setSettingMutation = useSetAppSettingMutation()
 
-  const [themePreference, setThemePreference] = useState<ThemePreference>(getInitialThemePreference)
+  const [themePreference, setThemePreference] = useState<ThemePreference>(
+    getInitialThemePreference,
+  )
 
-  const splitType: SplitType = activeSplitQuery.data?.value === "upper-lower" ? "upper-lower" : "ppl"
+  const splitType: SplitType =
+    activeSplitQuery.data?.value === "upper-lower" ? "upper-lower" : "ppl"
 
   useEffect(() => {
     if (!activeSplitQuery.isPending && !activeSplitQuery.data) {
@@ -48,7 +49,10 @@ export function AppLayout() {
             : "light"
           : preference
 
-      document.documentElement.classList.toggle("dark", effectiveTheme === "dark")
+      document.documentElement.classList.toggle(
+        "dark",
+        effectiveTheme === "dark",
+      )
       document.documentElement.style.colorScheme = effectiveTheme
     }
 
@@ -67,19 +71,6 @@ export function AppLayout() {
     }
   }, [themePreference])
 
-  const contextValue = useMemo<AppLayoutContextValue>(
-    () => ({
-      splitType,
-      setSplitType: async (nextSplitType: SplitType) => {
-        await setSettingMutation.mutateAsync({
-          key: "active-split",
-          value: nextSplitType,
-        })
-      },
-    }),
-    [setSettingMutation, splitType]
-  )
-
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
@@ -95,7 +86,17 @@ export function AppLayout() {
           }}
         />
 
-        <Outlet context={contextValue} />
+        <Outlet
+          context={{
+            splitType,
+            setSplitType: async (nextSplitType: SplitType) => {
+              await setSettingMutation.mutateAsync({
+                key: "active-split",
+                value: nextSplitType,
+              })
+            },
+          }}
+        />
 
         <AppFooter />
       </div>

@@ -5,7 +5,7 @@ export function AppFooter() {
     <footer className="space-y-1 pb-20 text-center text-sm text-muted-foreground md:pb-4">
       <p className="flex items-center justify-center gap-2">
         <BarbellIcon className="size-4" aria-hidden="true" />
-        <span>MVP v1: treino avançado + sleep/readiness, offline-first.</span>
+        <span>MVP v1: treino avançado + sono/prontidão, foco em uso sem internet.</span>
       </p>
       <p className="flex items-center justify-center gap-2 text-xs">
         <WarningIcon className="size-4" aria-hidden="true" />

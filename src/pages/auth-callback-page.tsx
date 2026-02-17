@@ -28,7 +28,7 @@ export function AuthCallbackPage() {
         } = await supabase.auth.getSession()
 
         if (!session?.user) {
-          throw new Error("No authenticated session found after callback.")
+          throw new Error("Nenhuma sessão autenticada foi encontrada após o callback.")
         }
 
         scheduleSync("auth")
@@ -41,7 +41,7 @@ export function AuthCallbackPage() {
           return
         }
 
-        setErrorMessage(error instanceof Error ? error.message : "Authentication callback failed")
+        setErrorMessage(error instanceof Error ? error.message : "Falha ao concluir a autenticação")
       }
     }
 
@@ -56,13 +56,13 @@ export function AuthCallbackPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-xl items-center px-4 py-8">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="text-lg">Completing sign-in...</CardTitle>
+          <CardTitle className="text-lg">Concluindo acesso...</CardTitle>
         </CardHeader>
         <CardContent>
           {errorMessage ? (
             <p className="text-sm text-destructive">{errorMessage}</p>
           ) : (
-            <p className="text-sm text-muted-foreground">Please wait while we finish authentication.</p>
+            <p className="text-sm text-muted-foreground">Aguarde enquanto finalizamos a autenticação.</p>
           )}
         </CardContent>
       </Card>

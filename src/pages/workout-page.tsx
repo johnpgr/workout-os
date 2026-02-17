@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useOutletContext } from "react-router"
 import { WeeklyLogsCard } from "@/features/training/components/weekly-logs-card"
 import { WorkoutsSection } from "@/features/training/components/workouts-section"
@@ -45,18 +45,15 @@ export function WorkoutPage() {
   const addSessionMutation = useAddSessionMutation()
   const deleteSessionMutation = useDeleteSessionMutation()
 
-  const weekLogs = useMemo(() => weekSessionsQuery.data ?? [], [weekSessionsQuery.data])
+  const weekLogs = weekSessionsQuery.data ?? []
 
-  const logsByDate = useMemo(() => {
-    const grouped = new Map<string, SessionWithSets[]>()
-    for (const logEntry of weekLogs) {
-      if (!grouped.has(logEntry.session.date)) {
-        grouped.set(logEntry.session.date, [])
-      }
-      grouped.get(logEntry.session.date)?.push(logEntry)
+  const logsByDate = new Map<string, SessionWithSets[]>()
+  for (const logEntry of weekLogs) {
+    if (!logsByDate.has(logEntry.session.date)) {
+      logsByDate.set(logEntry.session.date, [])
     }
-    return grouped
-  }, [weekLogs])
+    logsByDate.get(logEntry.session.date)?.push(logEntry)
+  }
 
   const selectedLogs = weekLogs
     .filter((entry) => entry.session.date === selectedDate)

@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { MuscleGroup } from "@/features/training/types"
 import { useWeeklyVolumeQuery } from "@/features/progress/queries"
 
 function colorByStatus(status: "low" | "target" | "high"): string {
@@ -8,9 +9,24 @@ function colorByStatus(status: "low" | "target" | "high"): string {
   return "#f59e0b"
 }
 
+const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
+  chest: "Peitoral",
+  back: "Costas",
+  shoulders: "Ombros",
+  biceps: "Bíceps",
+  triceps: "Tríceps",
+  quads: "Quadríceps",
+  hamstrings: "Posterior",
+  glutes: "Glúteos",
+  calves: "Panturrilhas",
+}
+
 export function VolumeChart() {
   const volumeQuery = useWeeklyVolumeQuery()
-  const data = volumeQuery.byMuscle
+  const data = volumeQuery.byMuscle.map((entry) => ({
+    ...entry,
+    muscleLabel: MUSCLE_GROUP_LABELS[entry.muscleGroup],
+  }))
 
   return (
     <Card>
@@ -25,12 +41,12 @@ export function VolumeChart() {
             <ResponsiveContainer>
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="muscleGroup" />
+                <XAxis dataKey="muscleLabel" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="sets">
+                <Bar dataKey="sets" name="Séries">
                   {data.map((entry) => (
-                    <Cell key={entry.muscleGroup} fill={colorByStatus(entry.status)} />
+                    <Cell key={`${entry.muscleGroup}-${entry.status}`} fill={colorByStatus(entry.status)} />
                   ))}
                 </Bar>
               </BarChart>

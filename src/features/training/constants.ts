@@ -18,17 +18,17 @@ export const WEEKDAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"]
 export const WEEK_MODE_LABELS: Record<WeekMode, string> = {
   "ppl-6": "PPL 6x",
   "ppl-3": "PPL 3x",
-  "upper-lower-4": "Upper/Lower 4x",
+  "upper-lower-4": "Superior/Inferior 4x",
 }
 
 export const TYPE_LABELS: Record<PlannedType, string> = {
-  push: "Push",
-  pull: "Pull",
-  leg: "Legs",
-  "upper-a": "Upper A",
-  "upper-b": "Upper B",
-  "lower-a": "Lower A",
-  "lower-b": "Lower B",
+  push: "Empurrar",
+  pull: "Puxar",
+  leg: "Pernas",
+  "upper-a": "Superior A",
+  "upper-b": "Superior B",
+  "lower-a": "Inferior A",
+  "lower-b": "Inferior B",
   rest: "Descanso",
 }
 
@@ -42,19 +42,19 @@ export const WEEK_PATTERNS: Record<WeekMode, PlannedType[]> = {
 }
 
 export const TECHNIQUE_LABELS: Record<IntensificationTechnique, string> = {
-  dropset: "Dropset",
-  "rest-pause": "Rest-Pause",
-  superset: "Superset",
-  "myo-reps": "Myo-reps",
+  dropset: "Drop set",
+  "rest-pause": "Descanso-pausa",
+  superset: "Bi-set",
+  "myo-reps": "Myo-repetições",
 }
 
 export const RPE_OPTIONS = [6, 7, 8, 9, 10] as const
 
 export const INFO_CARDS = [
-  { label: "Modelo", value: "PPL + Upper/Lower" },
+  { label: "Modelo", value: "PPL + Superior/Inferior" },
   { label: "Objetivo", value: "Progressão sustentável" },
   { label: "Rastreamento", value: "Por série (RPE/RIR)" },
-  { label: "Recuperação", value: "Sono + Readiness" },
+  { label: "Recuperação", value: "Sono + Prontidão" },
 ]
 
 export const TIPS: TipItem[] = [
@@ -63,7 +63,7 @@ export const TIPS: TipItem[] = [
     icon: ArrowsClockwiseIcon,
     items: [
       "Suba carga apenas quando desempenho e RPE confirmarem evolução.",
-      "Use step loading: consolide repetições antes de aumentar peso.",
+      "Use progressão em passos: consolide repetições antes de aumentar peso.",
       "Não persiga PR em toda sessão.",
     ],
   },
@@ -72,17 +72,17 @@ export const TIPS: TipItem[] = [
     icon: ClockCountdownIcon,
     items: [
       "Distribua o volume semanal em 2-3 estímulos por músculo.",
-      "Evite junk volume em sessões longas.",
+      "Evite volume lixo em sessões longas.",
       "Se a recuperação cair, reduza volume antes de cortar frequência.",
     ],
   },
   {
-    title: "Readiness",
+    title: "Prontidão",
     icon: ClipboardTextIcon,
     items: [
       "Durma 7-9h para preservar performance.",
       "Sono ruim por vários dias pede ajuste de intensidade.",
-      "Use deload de forma reativa quando a fadiga acumular.",
+      "Use semana de descarga de forma reativa quando a fadiga acumular.",
     ],
   },
   {
@@ -91,7 +91,7 @@ export const TIPS: TipItem[] = [
     items: [
       "Hidratação diária consistente.",
       "Proteína adequada para recuperação.",
-      "Treino com técnica > ego load.",
+      "Treino com técnica > carga por ego.",
     ],
   },
 ]

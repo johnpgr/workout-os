@@ -17,11 +17,11 @@ export function ReadinessCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Readiness atual</CardTitle>
+        <CardTitle className="text-lg">Prontidão atual</CardTitle>
       </CardHeader>
       <CardContent>
         {!latest ? (
-          <p className="text-sm text-muted-foreground">Sem check-in registrado.</p>
+          <p className="text-sm text-muted-foreground">Sem registro de prontidão.</p>
         ) : (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Data: {latest.date}</p>

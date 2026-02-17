@@ -45,7 +45,7 @@ export function buildProgressionSuggestion(sessions: SessionWithSets[]): Omit<Re
       kind: "increase-load",
       status: "pending",
       message: "Desempenho consistente. Considere subir 2,5kg no principal da próxima sessão.",
-      reason: "Volume load subiu >= 3% com esforço controlado.",
+      reason: "Carga de volume subiu >= 3% com esforço controlado.",
     }
   }
 
@@ -57,7 +57,7 @@ export function buildProgressionSuggestion(sessions: SessionWithSets[]): Omit<Re
       kind: "reduce-intensity",
       status: "pending",
       message: "Queda de performance com alto esforço. Mantenha carga ou reduza 5-10%.",
-      reason: "Volume load caiu > 10% com RPE médio alto.",
+      reason: "Carga de volume caiu > 10% com RPE médio alto.",
     }
   }
 

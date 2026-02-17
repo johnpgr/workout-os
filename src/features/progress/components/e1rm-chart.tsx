@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useProgressSessionsQuery } from "@/features/progress/queries"
@@ -7,27 +7,22 @@ import { getBestE1RMForExercise } from "@/features/progress/e1rm-utils"
 export function E1RMChart() {
   const sessionsQuery = useProgressSessionsQuery()
 
-  const exerciseOptions = useMemo(() => {
-    const names = new Set<string>()
-    for (const session of sessionsQuery.data ?? []) {
-      for (const set of session.sets) {
-        names.add(set.exerciseName)
-      }
+  const names = new Set<string>()
+  for (const session of sessionsQuery.data ?? []) {
+    for (const set of session.sets) {
+      names.add(set.exerciseName)
     }
-    return [...names].sort((a, b) => a.localeCompare(b))
-  }, [sessionsQuery.data])
+  }
+  const exerciseOptions = [...names].sort((a, b) => a.localeCompare(b))
 
   const [exerciseName, setExerciseName] = useState<string>("")
 
   const selectedExercise = exerciseName || exerciseOptions[0] || ""
 
-  const chartData = useMemo(() => {
-    if (!selectedExercise || !sessionsQuery.data) {
-      return []
-    }
-
-    return getBestE1RMForExercise(sessionsQuery.data, selectedExercise)
-  }, [selectedExercise, sessionsQuery.data])
+  const chartData =
+    selectedExercise && sessionsQuery.data
+      ? getBestE1RMForExercise(sessionsQuery.data, selectedExercise)
+      : []
 
   return (
     <Card>

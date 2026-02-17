@@ -39,7 +39,7 @@ export function SetRowInput({
           min={0}
           step={1}
           className="h-11"
-          placeholder="Reps"
+          placeholder="Repetições"
           {...register(`exercises.${exerciseIndex}.sets.${setIndex}.reps`)}
         />
 

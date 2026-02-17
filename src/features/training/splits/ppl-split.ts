@@ -7,14 +7,14 @@ import type { SplitConfig } from "@/features/training/types"
 
 export const PPL_SPLIT: SplitConfig = {
   type: "ppl",
-  label: "Push / Pull / Legs",
+  label: "Empurrar / Puxar / Pernas",
   weekModes: ["ppl-6", "ppl-3"],
   workouts: [
     {
       splitType: "ppl",
       type: "push",
-      label: "Push",
-      title: "Push",
+      label: "Empurrar",
+      title: "Empurrar",
       icon: BarbellIcon,
       badge: "PEITO / OMBRO / TRÍCEPS",
       focus: "hypertrophy",
@@ -75,8 +75,8 @@ export const PPL_SPLIT: SplitConfig = {
     {
       splitType: "ppl",
       type: "pull",
-      label: "Pull",
-      title: "Pull",
+      label: "Puxar",
+      title: "Puxar",
       icon: ArrowsClockwiseIcon,
       badge: "COSTAS / BÍCEPS",
       focus: "hypertrophy",
@@ -137,8 +137,8 @@ export const PPL_SPLIT: SplitConfig = {
     {
       splitType: "ppl",
       type: "leg",
-      label: "Legs",
-      title: "Legs",
+      label: "Pernas",
+      title: "Pernas",
       icon: PersonSimpleRunIcon,
       badge: "QUADS / POSTERIOR / GLÚTEO",
       focus: "hypertrophy",

@@ -58,9 +58,9 @@ export function WeeklyLogsCard({
   return (
     <Card className="bg-card text-foreground ring-border">
       <CardHeader>
-        <CardTitle className="text-2xl">Calendário + Logs</CardTitle>
+        <CardTitle className="text-2xl">Calendário + Registros</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          Registro por série com peso, reps, RPE e técnica.
+          Registro por série com peso, repetições, RPE e técnica.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

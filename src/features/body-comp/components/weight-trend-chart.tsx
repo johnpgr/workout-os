@@ -18,7 +18,7 @@ export function WeightTrendChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Tendência de peso (7d MA)</CardTitle>
+        <CardTitle className="text-lg">Tendência de peso (MM 7d)</CardTitle>
       </CardHeader>
       <CardContent>
         {!chartData.length ? (
@@ -31,8 +31,14 @@ export function WeightTrendChart() {
                 <XAxis dataKey="date" />
                 <YAxis domain={["auto", "auto"]} />
                 <Tooltip />
-                <Line type="monotone" dataKey="weight" stroke="var(--color-chart-3)" dot={false} />
-                <Line type="monotone" dataKey="movingAverage" stroke="var(--color-chart-1)" dot={false} />
+                <Line type="monotone" dataKey="weight" name="Peso" stroke="var(--color-chart-3)" dot={false} />
+                <Line
+                  type="monotone"
+                  dataKey="movingAverage"
+                  name="Média móvel (7d)"
+                  stroke="var(--color-chart-1)"
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>

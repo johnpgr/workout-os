@@ -8,7 +8,7 @@ export function VolumeTrendChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Tendência de Volume Load</CardTitle>
+        <CardTitle className="text-lg">Tendência de Carga de Volume</CardTitle>
       </CardHeader>
       <CardContent>
         {!volumeQuery.trend.length ? (
@@ -21,7 +21,14 @@ export function VolumeTrendChart() {
                 <XAxis dataKey="week" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="volumeLoad" stroke="var(--color-chart-2)" strokeWidth={2} dot={false} />
+                <Line
+                  type="monotone"
+                  dataKey="volumeLoad"
+                  name="Carga de volume"
+                  stroke="var(--color-chart-2)"
+                  strokeWidth={2}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>

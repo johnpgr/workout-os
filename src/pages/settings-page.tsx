@@ -1,4 +1,4 @@
-import { use, useEffect, useMemo, useRef, useState } from "react"
+import { use, useEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { useOutletContext } from "react-router"
 import { useReactToPrint } from "react-to-print"
@@ -92,10 +92,10 @@ export function SettingsPage() {
   const [reportData, setReportData] = useState<TrainingReportData | null>(null)
   const printReportRef = useRef<HTMLDivElement>(null)
 
-  const splitLabel = useMemo(() => getSplitConfig(splitType).label, [splitType])
+  const splitLabel = getSplitConfig(splitType).label
   const printReport = useReactToPrint({
     contentRef: printReportRef,
-    documentTitle: `training-report-${new Date().toISOString().slice(0, 10)}`,
+    documentTitle: `relatorio-treino-${new Date().toISOString().slice(0, 10)}`,
   })
 
   useEffect(() => {
@@ -104,16 +104,16 @@ export function SettingsPage() {
 
   async function handleSignInWithMagicLink() {
     if (!email.trim()) {
-      setAuthStatus("Enter an email to receive the magic link.")
+      setAuthStatus("Informe um e-mail para receber o link mágico.")
       return
     }
 
     try {
       await signInWithMagicLink(email.trim())
-      setAuthStatus("Magic link sent. Check your inbox.")
+      setAuthStatus("Link mágico enviado. Verifique sua caixa de entrada.")
     } catch (error) {
       setAuthStatus(
-        error instanceof Error ? error.message : "Failed to send magic link.",
+        error instanceof Error ? error.message : "Não foi possível enviar o link mágico.",
       )
     }
   }
@@ -121,10 +121,10 @@ export function SettingsPage() {
   async function handleSignOut() {
     try {
       await signOut()
-      setAuthStatus("Signed out.")
+      setAuthStatus("Sessão encerrada.")
     } catch (error) {
       setAuthStatus(
-        error instanceof Error ? error.message : "Failed to sign out.",
+        error instanceof Error ? error.message : "Não foi possível sair.",
       )
     }
   }
@@ -132,7 +132,7 @@ export function SettingsPage() {
   async function handleExportJson() {
     const snapshot = await getBackupSnapshot()
     downloadTextFile(
-      `training-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      `backup-treinos-${new Date().toISOString().slice(0, 10)}.json`,
       JSON.stringify(snapshot, null, 2),
       "application/json",
     )
@@ -143,18 +143,18 @@ export function SettingsPage() {
 
     const rows = [
       [
-        "date",
-        "splitType",
-        "workoutType",
-        "workoutLabel",
-        "durationMin",
-        "exerciseName",
-        "setOrder",
-        "weightKg",
-        "reps",
+        "data",
+        "tipoDivisao",
+        "tipoTreino",
+        "nomeTreino",
+        "duracaoMin",
+        "nomeExercicio",
+        "ordemSerie",
+        "pesoKg",
+        "repeticoes",
         "rpe",
         "rir",
-        "technique",
+        "tecnica",
       ],
     ]
 
@@ -186,7 +186,7 @@ export function SettingsPage() {
       .join("\n")
 
     downloadTextFile(
-      `training-sets-${new Date().toISOString().slice(0, 10)}.csv`,
+      `series-treino-${new Date().toISOString().slice(0, 10)}.csv`,
       csv,
       "text/csv;charset=utf-8",
     )
@@ -205,17 +205,17 @@ export function SettingsPage() {
     <section className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Account</CardTitle>
+          <CardTitle className="text-lg">Conta</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading session...</p>
+            <p className="text-sm text-muted-foreground">Carregando sessão...</p>
           ) : isAuthenticated ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Signed in as{" "}
+                Conectado como{" "}
                 <span className="font-medium text-foreground">
-                  {user?.email ?? "user"}
+                  {user?.email ?? "usuário"}
                 </span>
               </p>
               <Button
@@ -223,18 +223,18 @@ export function SettingsPage() {
                 variant="outline"
                 onClick={() => void handleSignOut()}
               >
-                Sign out
+                Sair
               </Button>
             </>
           ) : (
             <>
               <p className="text-sm text-muted-foreground">
-                You are in local guest mode.
+                Você está no modo convidado local.
               </p>
               <div className="space-y-2">
                 <Input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="voce@exemplo.com"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
@@ -242,7 +242,7 @@ export function SettingsPage() {
                   type="button"
                   onClick={() => void handleSignInWithMagicLink()}
                 >
-                  Send magic link
+                  Enviar link mágico
                 </Button>
               </div>
             </>
@@ -256,23 +256,23 @@ export function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Sync</CardTitle>
+          <CardTitle className="text-lg">Sincronização</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            Saved on device:{" "}
-            {pendingChanges > 0 ? "Yes (pending cloud sync)" : "Yes"}
+            Salvo no dispositivo:{" "}
+            {pendingChanges > 0 ? "Sim (sincronização em nuvem pendente)" : "Sim"}
           </p>
           <p className="text-sm text-muted-foreground">
-            Synced to cloud:{" "}
-            {isAuthenticated ? "Enabled" : "Disabled (not signed in)"}
+            Sincronização em nuvem:{" "}
+            {isAuthenticated ? "Ativada" : "Desativada (não autenticado)"}
           </p>
           <p className="text-sm text-muted-foreground">
-            Last sync:{" "}
-            {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : "Never"}
+            Última sincronização:{" "}
+            {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : "Nunca"}
           </p>
           {syncError ? (
-            <p className="text-sm text-destructive">Last error: {syncError}</p>
+            <p className="text-sm text-destructive">Último erro: {syncError}</p>
           ) : null}
 
           <Button
@@ -281,14 +281,14 @@ export function SettingsPage() {
             disabled={!isAuthenticated || isSyncing}
             onClick={() => void syncNow()}
           >
-            {isSyncing ? "Syncing..." : "Sync now"}
+            {isSyncing ? "Sincronizando..." : "Sincronizar agora"}
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Split ativo</CardTitle>
+          <CardTitle className="text-lg">Divisão ativa</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">Atual: {splitLabel}</p>
@@ -298,11 +298,11 @@ export function SettingsPage() {
             onValueChange={(value) => void setSplitType(value as SplitType)}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione o split" />
+              <SelectValue placeholder="Selecione a divisão" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ppl">Push / Pull / Legs</SelectItem>
-              <SelectItem value="upper-lower">Upper / Lower</SelectItem>
+              <SelectItem value="ppl">Empurrar / Puxar / Pernas</SelectItem>
+              <SelectItem value="upper-lower">Superior / Inferior</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
@@ -336,13 +336,13 @@ export function SettingsPage() {
       {storageChecked && isIOS && storagePersisted === false ? (
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-lg">iOS storage notice</CardTitle>
+            <CardTitle className="text-lg">Aviso de armazenamento no iOS</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Offline data is best-effort on iOS Safari without persistent
-              storage. Install this app on your home screen for more reliable
-              offline retention.
+              No Safari do iOS, os dados offline funcionam em modo de melhor
+              esforço sem armazenamento persistente. Instale este app na tela
+              inicial para retenção offline mais confiável.
             </p>
           </CardContent>
         </Card>
@@ -366,9 +366,9 @@ export function SettingsPage() {
             fontFamily: "Arial, sans-serif",
           }}
         >
-          <h1 style={{ marginBottom: "6px" }}>Training App Report</h1>
+          <h1 style={{ marginBottom: "6px" }}>Relatório do Aplicativo de Treino</h1>
           <p style={{ color: "#555", marginTop: 0 }}>
-            Generated at {reportData?.generatedAt ?? "-"}
+            Gerado em {reportData?.generatedAt ?? "-"}
           </p>
 
           <div
@@ -386,7 +386,7 @@ export function SettingsPage() {
                 padding: "12px",
               }}
             >
-              <strong>Total sessions</strong>
+              <strong>Total de sessões</strong>
               <div>{reportData?.totalSessions ?? 0}</div>
             </div>
             <div
@@ -396,7 +396,7 @@ export function SettingsPage() {
                 padding: "12px",
               }}
             >
-              <strong>Total set logs</strong>
+              <strong>Total de séries registradas</strong>
               <div>{reportData?.totalSets ?? 0}</div>
             </div>
             <div
@@ -406,7 +406,7 @@ export function SettingsPage() {
                 padding: "12px",
               }}
             >
-              <strong>Readiness check-ins</strong>
+              <strong>Registros de prontidão</strong>
               <div>{reportData?.totalReadiness ?? 0}</div>
             </div>
             <div
@@ -416,12 +416,12 @@ export function SettingsPage() {
                 padding: "12px",
               }}
             >
-              <strong>Weight entries</strong>
+              <strong>Registros de peso</strong>
               <div>{reportData?.totalWeightEntries ?? 0}</div>
             </div>
           </div>
 
-          <h2>Recent Sessions</h2>
+          <h2>Sessões recentes</h2>
           <table
             style={{
               width: "100%",
@@ -439,7 +439,7 @@ export function SettingsPage() {
                     background: "#f8f8f8",
                   }}
                 >
-                  Date
+                  Data
                 </th>
                 <th
                   style={{
@@ -449,7 +449,7 @@ export function SettingsPage() {
                     background: "#f8f8f8",
                   }}
                 >
-                  Split
+                  Divisão
                 </th>
                 <th
                   style={{
@@ -459,7 +459,7 @@ export function SettingsPage() {
                     background: "#f8f8f8",
                   }}
                 >
-                  Workout
+                  Treino
                 </th>
                 <th
                   style={{
@@ -469,7 +469,7 @@ export function SettingsPage() {
                     background: "#f8f8f8",
                   }}
                 >
-                  Duration
+                  Duração
                 </th>
                 <th
                   style={{
@@ -479,7 +479,7 @@ export function SettingsPage() {
                     background: "#f8f8f8",
                   }}
                 >
-                  Sets
+                  Séries
                 </th>
               </tr>
             </thead>

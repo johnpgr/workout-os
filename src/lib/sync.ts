@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Temporal } from "@/lib/temporal"
+import type { Database } from "@/types/database"
 import {
   applyPulledChanges,
   getDirtyRowCount,
@@ -22,6 +23,8 @@ const SYNC_NEXT_RETRY_AT_KEY = "next_retry_at"
 const ADAPTIVE_INTERVALS = [60_000, 300_000, 900_000]
 const RETRY_STEPS = [1_000, 2_000, 4_000, 8_000, 15_000, 30_000, 60_000, 120_000, 300_000]
 const MIN_SYNC_GAP_MS = 10_000
+
+type SyncPushPayload = Database["public"]["Functions"]["sync_push"]["Args"]["payload"]
 
 interface SyncStatus {
   isSyncing: boolean
@@ -277,7 +280,7 @@ export async function pushToCloud() {
   }
 
   const { data, error } = await supabase.rpc("sync_push", {
-    payload: snapshot,
+    payload: snapshot as unknown as SyncPushPayload,
   })
 
   if (error) {
@@ -401,7 +404,7 @@ export async function syncNow(_trigger: SyncTrigger = "manual", force = false): 
 
       const retryDelay = getBackoffDelay(retryCount)
       const nextRetryAt = Temporal.Now.instant().add({ milliseconds: retryDelay }).toString()
-      const message = error instanceof Error ? error.message : "Sync failed"
+      const message = error instanceof Error ? error.message : "Falha na sincronização"
 
       await Promise.all([
         setSyncState(SYNC_LAST_ERROR_KEY, message),

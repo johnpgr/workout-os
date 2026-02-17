@@ -1,6 +1,5 @@
 import {
   useEffect,
-  useMemo,
   useState,
   type PropsWithChildren,
 } from "react"
@@ -61,34 +60,31 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }, [])
 
-  const contextValue = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      isAuthenticated: Boolean(user),
-      isLoading,
-      signInWithMagicLink: async (email: string) => {
-        const redirectTo = getEmailRedirectUrl()
+  const contextValue: AuthContextValue = {
+    user,
+    isAuthenticated: Boolean(user),
+    isLoading,
+    signInWithMagicLink: async (email: string) => {
+      const redirectTo = getEmailRedirectUrl()
 
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: redirectTo,
-          },
-        })
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      })
 
-        if (error) {
-          throw error
-        }
-      },
-      signOut: async () => {
-        const { error } = await supabase.auth.signOut()
-        if (error) {
-          throw error
-        }
-      },
-    }),
-    [isLoading, user]
-  )
+      if (error) {
+        throw error
+      }
+    },
+    signOut: async () => {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        throw error
+      }
+    },
+  }
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 }

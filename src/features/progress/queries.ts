@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { useAllSessionsQuery } from "@/features/training/queries"
 import { getBestE1RMForExercise } from "@/features/progress/e1rm-utils"
 import {
@@ -13,13 +12,9 @@ export function useProgressSessionsQuery() {
 export function useE1RMProgressQuery(exerciseName: string) {
   const sessionsQuery = useAllSessionsQuery()
 
-  const data = useMemo(() => {
-    if (!sessionsQuery.data) {
-      return []
-    }
-
-    return getBestE1RMForExercise(sessionsQuery.data, exerciseName)
-  }, [sessionsQuery.data, exerciseName])
+  const data = sessionsQuery.data
+    ? getBestE1RMForExercise(sessionsQuery.data, exerciseName)
+    : []
 
   return {
     ...sessionsQuery,
@@ -30,21 +25,13 @@ export function useE1RMProgressQuery(exerciseName: string) {
 export function useWeeklyVolumeQuery() {
   const sessionsQuery = useAllSessionsQuery()
 
-  const byMuscle = useMemo(() => {
-    if (!sessionsQuery.data) {
-      return []
-    }
+  const byMuscle = sessionsQuery.data
+    ? calculateVolumeByMuscle(sessionsQuery.data)
+    : []
 
-    return calculateVolumeByMuscle(sessionsQuery.data)
-  }, [sessionsQuery.data])
-
-  const trend = useMemo(() => {
-    if (!sessionsQuery.data) {
-      return []
-    }
-
-    return calculateWeeklyVolumeLoadTrend(sessionsQuery.data)
-  }, [sessionsQuery.data])
+  const trend = sessionsQuery.data
+    ? calculateWeeklyVolumeLoadTrend(sessionsQuery.data)
+    : []
 
   return {
     ...sessionsQuery,
