@@ -12,6 +12,8 @@ import type {
 import type { PlannedType, TipItem, WeekMode } from "@/features/training/types"
 
 export const THEME_STORAGE_KEY = "treinos-theme-preference"
+export const WORKOUT_TERMS_HELP_SEEN_KEY =
+  "treinos-workout-terms-help-seen-v1"
 
 export const WEEKDAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"]
 

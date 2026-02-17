@@ -50,11 +50,51 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_catalog: {
+        Row: {
+          created_at: string
+          detail: string
+          id: string
+          is_active: boolean
+          muscle_group: string
+          name: string
+          primary_muscle: string | null
+          sort_order: number
+          updated_at: string
+          youtube_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail: string
+          id: string
+          is_active?: boolean
+          muscle_group: string
+          name: string
+          primary_muscle?: string | null
+          sort_order?: number
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string
+          id?: string
+          is_active?: boolean
+          muscle_group?: string
+          name?: string
+          primary_muscle?: string | null
+          sort_order?: number
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       exercise_set_logs: {
         Row: {
           created_at: string
           date: string
           deleted_at: string | null
+          exercise_id: string | null
           exercise_name: string
           exercise_order: number
           id: string
@@ -76,6 +116,7 @@ export type Database = {
           created_at: string
           date: string
           deleted_at?: string | null
+          exercise_id?: string | null
           exercise_name: string
           exercise_order: number
           id: string
@@ -97,6 +138,7 @@ export type Database = {
           created_at?: string
           date?: string
           deleted_at?: string | null
+          exercise_id?: string | null
           exercise_name?: string
           exercise_order?: number
           id?: string

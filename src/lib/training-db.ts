@@ -3,6 +3,7 @@ import { v7 as uuidv7 } from "uuid"
 import { Temporal } from "@/lib/temporal"
 import type {
   AppSetting,
+  AppSettingKey,
   ExerciseSetLog,
   ReadinessLog,
   Recommendation,
@@ -35,6 +36,7 @@ export type {
 export interface SaveSessionInput {
   session: Omit<TrainingSession, "id" | "createdAt" | "updatedAt" | "deletedAt" | "version">
   sets: Array<{
+    exerciseId: string | null
     exerciseName: string
     exerciseOrder: number
     setOrder: number
@@ -100,6 +102,18 @@ export interface SyncedIdsByTable {
   appSettings?: string[]
 }
 
+export interface ExerciseCatalogCacheEntry {
+  id: string
+  name: string
+  detail: string
+  muscleGroup: string
+  primaryMuscle: string | null
+  youtubeUrl: string | null
+  isActive: boolean
+  sortOrder: number
+  updatedAt: string
+}
+
 class TrainingLogsDatabase extends Dexie {
   sessions!: Table<TrainingSession, string>
   exerciseSets!: Table<ExerciseSetLog, string>
@@ -108,6 +122,7 @@ class TrainingLogsDatabase extends Dexie {
   appSettings!: Table<AppSetting, string>
   recommendations!: Table<Recommendation, string>
   syncState!: Table<SyncStateRecord, string>
+  exerciseCatalogCache!: Table<ExerciseCatalogCacheEntry, string>
 
   constructor() {
     super("treinos-training")
@@ -121,6 +136,16 @@ class TrainingLogsDatabase extends Dexie {
       recommendations: "&id, date, status, kind, workoutType, updatedAt, deletedAt, isDirty",
       sync_state: "&key, updatedAt",
     })
+    this.version(2).stores({
+      sessions: "&id, date, splitType, workoutType, updatedAt, deletedAt, isDirty",
+      exercise_sets: "&id, sessionId, date, splitType, workoutType, exerciseId, exerciseName, updatedAt, deletedAt, isDirty",
+      readiness_logs: "&id, date, updatedAt, deletedAt, isDirty",
+      weight_logs: "&id, date, updatedAt, deletedAt, isDirty",
+      app_settings: "&id, &key, updatedAt, isDirty",
+      recommendations: "&id, date, status, kind, workoutType, updatedAt, deletedAt, isDirty",
+      sync_state: "&key, updatedAt",
+      exercise_catalog_cache: "&id, muscleGroup, primaryMuscle, isActive, sortOrder, updatedAt",
+    })
 
     this.sessions = this.table("sessions")
     this.exerciseSets = this.table("exercise_sets")
@@ -129,6 +154,7 @@ class TrainingLogsDatabase extends Dexie {
     this.appSettings = this.table("app_settings")
     this.recommendations = this.table("recommendations")
     this.syncState = this.table("sync_state")
+    this.exerciseCatalogCache = this.table("exercise_catalog_cache")
   }
 }
 
@@ -294,6 +320,7 @@ export async function saveSessionWithSets(input: SaveSessionInput): Promise<stri
     date: session.date,
     splitType: session.splitType,
     workoutType: session.workoutType,
+    exerciseId: set.exerciseId,
     exerciseName: set.exerciseName,
     exerciseOrder: set.exerciseOrder,
     setOrder: set.setOrder,
@@ -505,7 +532,7 @@ export async function getAllReadinessLogs(): Promise<ReadinessLog[]> {
   return logs.sort((a, b) => a.date.localeCompare(b.date))
 }
 
-export async function getSetting(key: AppSetting["key"]): Promise<AppSetting | null> {
+export async function getSetting(key: AppSettingKey): Promise<AppSetting | null> {
   const setting = await db.appSettings.where("key").equals(key).first()
   return setting?.deletedAt === null ? setting : null
 }
@@ -514,7 +541,7 @@ export async function getAllSettings(): Promise<AppSetting[]> {
   return db.appSettings.filter((setting) => setting.deletedAt === null).toArray()
 }
 
-export async function setSetting(key: AppSetting["key"], value: string): Promise<string> {
+export async function setSetting(key: AppSettingKey, value: string): Promise<string> {
   const current = await db.appSettings.where("key").equals(key).first()
 
   if (current) {
@@ -683,4 +710,28 @@ export async function getBackupSnapshot() {
     settings,
     recommendations,
   }
+}
+
+export async function getCachedExerciseCatalog(): Promise<ExerciseCatalogCacheEntry[]> {
+  const rows = await db.exerciseCatalogCache.toArray()
+  return rows.sort((a, b) => {
+    if (a.sortOrder !== b.sortOrder) {
+      return a.sortOrder - b.sortOrder
+    }
+
+    return a.name.localeCompare(b.name)
+  })
+}
+
+export async function replaceExerciseCatalogCache(
+  rows: ExerciseCatalogCacheEntry[],
+): Promise<void> {
+  await db.transaction("rw", db.exerciseCatalogCache, async () => {
+    await db.exerciseCatalogCache.clear()
+    if (!rows.length) {
+      return
+    }
+
+    await db.exerciseCatalogCache.bulkPut(rows)
+  })
 }

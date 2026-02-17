@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { TermHelpPopover } from "@/features/training/components/term-help-popover"
 import { TECHNIQUE_LABELS, RPE_OPTIONS } from "@/features/training/constants"
 import type { WorkoutFormValues } from "@/features/training/form-schema"
 import { CaretDownIcon } from "@phosphor-icons/react"
@@ -21,6 +22,7 @@ interface SetRowInputProps {
   control: Control<WorkoutFormValues>
   onRemove: () => void
   canRemove: boolean
+  autoOpenRpeHelp?: boolean
 }
 
 export function SetRowInput({
@@ -29,6 +31,7 @@ export function SetRowInput({
   control,
   onRemove,
   canRemove,
+  autoOpenRpeHelp = false,
 }: SetRowInputProps) {
   const weightFieldName = `exercises.${exerciseIndex}.sets.${setIndex}.weight` as const
   const repsFieldName = `exercises.${exerciseIndex}.sets.${setIndex}.reps` as const
@@ -56,6 +59,24 @@ export function SetRowInput({
 
   return (
     <div className="space-y-2 rounded-md border border-border p-2">
+      <div className="grid gap-2 md:grid-cols-4">
+        <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+          Peso (kg)
+        </p>
+        <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+          Repetições
+        </p>
+        <p className="flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+          <span>RPE</span>
+          <TermHelpPopover term="rpe" autoOpen={autoOpenRpeHelp} />
+          <TermHelpPopover term="rir" />
+        </p>
+        <p className="flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+          <span>Técnica</span>
+          <TermHelpPopover term="technique" />
+        </p>
+      </div>
+
       <div className="grid gap-2 md:grid-cols-4">
         <Input
           type="number"

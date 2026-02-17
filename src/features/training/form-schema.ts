@@ -34,7 +34,9 @@ export const workoutFormSchema = z.object({
   notes: z.string(),
   exercises: z.array(
     z.object({
+      exerciseId: z.string().trim().min(1).nullable(),
       exerciseName: z.string().min(1),
+      videoUrl: z.string().url("Informe uma URL válida.").or(z.literal("")),
       sets: z.array(setSchema).min(1, "Adicione pelo menos uma série."),
     })
   ),
@@ -48,7 +50,9 @@ export function createWorkoutFormDefaultValues(defaultDate: string, workout: Wor
     duration: "",
     notes: "",
     exercises: workout.exercises.map((exercise) => ({
+      exerciseId: exercise.exerciseId ?? null,
       exerciseName: exercise.name,
+      videoUrl: exercise.youtubeUrl ?? "",
       sets: Array.from({ length: exercise.defaultSets }, () => ({
         weight: "",
         reps: "",

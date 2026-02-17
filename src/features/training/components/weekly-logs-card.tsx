@@ -6,9 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   TECHNIQUE_LABELS,
   TYPE_LABELS,
-  WEEKDAY_LABELS,
   WEEK_MODE_LABELS,
-  WEEK_PATTERNS,
 } from "@/features/training/constants"
 import {
   formatDateBR,
@@ -17,13 +15,16 @@ import {
   getISOWeekInputValue,
   toISODateString,
 } from "@/features/training/helpers"
-import type { WeekMode, WeekSummary } from "@/features/training/types"
+import type { PlannedType, WeekMode, WeekSummary } from "@/features/training/types"
 import type { Temporal } from "@/lib/temporal"
 import type { SessionWithSets } from "@/lib/training-types"
 
 interface WeeklyLogsCardProps {
   mode: WeekMode
   availableModes: WeekMode[]
+  dayPlanOptions: PlannedType[]
+  originalWeekPattern: PlannedType[]
+  effectiveWeekPattern: PlannedType[]
   weekDates: Temporal.PlainDate[]
   selectedDate: string
   selectedLogs: SessionWithSets[]
@@ -32,11 +33,23 @@ interface WeeklyLogsCardProps {
   isLogsLoading: boolean
   logsErrorMessage: string | null
   isDeletingLog: boolean
+  isSavingRoutine: boolean
   onWeekValueChange: (value: string) => void
   onModeChange: (value: WeekMode) => void
   onSelectedDateChange: (value: string) => void
+  onDayPlanChange: (dayIndex: number, plannedType: PlannedType) => Promise<void>
   onDeleteLog: (id: string) => Promise<void>
 }
+
+const WEEKDAY_LABELS_WORKOUT = [
+  "Segunda",
+  "Terça",
+  "Quarta",
+  "Quinta",
+  "Sexta",
+  "Sábado",
+  "Domingo",
+]
 
 function formatWeekRangeLabel(weekDates: Temporal.PlainDate[]): string | undefined {
   const weekStart = weekDates[0]
@@ -58,6 +71,9 @@ function formatWeekRangeLabel(weekDates: Temporal.PlainDate[]): string | undefin
 export function WeeklyLogsCard({
   mode,
   availableModes,
+  dayPlanOptions,
+  originalWeekPattern,
+  effectiveWeekPattern,
   weekDates,
   selectedDate,
   selectedLogs,
@@ -66,11 +82,29 @@ export function WeeklyLogsCard({
   isLogsLoading,
   logsErrorMessage,
   isDeletingLog,
+  isSavingRoutine,
   onWeekValueChange,
   onModeChange,
   onSelectedDateChange,
+  onDayPlanChange,
   onDeleteLog,
 }: WeeklyLogsCardProps) {
+  const changedDayIndexes = weekDates
+    .map((_, index) => index)
+    .filter(
+      (index) =>
+        originalWeekPattern[index] !== undefined &&
+        effectiveWeekPattern[index] !== undefined &&
+        originalWeekPattern[index] !== effectiveWeekPattern[index],
+    )
+  const changedDaysLabel = changedDayIndexes
+    .map((index) => {
+      const original = originalWeekPattern[index]
+      const current = effectiveWeekPattern[index]
+      return `${WEEKDAY_LABELS_WORKOUT[index].toUpperCase()}: ${TYPE_LABELS[original]} -> ${TYPE_LABELS[current]}`
+    })
+    .join(" · ")
+
   return (
     <Card className="bg-card text-foreground ring-border">
       <CardHeader>
@@ -112,33 +146,77 @@ export function WeeklyLogsCard({
           </div>
         </div>
 
+        {changedDayIndexes.length ? (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+            <p className="text-xs uppercase tracking-[0.08em] text-destructive">
+              Dias modificados nesta rotina
+            </p>
+            <p className="mt-1 text-sm text-foreground">{changedDaysLabel}</p>
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-7">
           {weekDates.map((day, index) => {
             const dayISO = toISODateString(day)
             const dayLogs = logsByDate.get(dayISO) ?? []
             const totalMinutes = dayLogs.reduce((minutes, log) => minutes + Number(log.session.durationMin || 0), 0)
-            const planType = WEEK_PATTERNS[mode][index]
+            const originalType = originalWeekPattern[index] ?? "rest"
+            const planType = effectiveWeekPattern[index] ?? originalType
+            const hasShift = originalType !== planType
 
             return (
-              <button
+              <div
                 key={dayISO}
-                type="button"
-                onClick={() => onSelectedDateChange(dayISO)}
                 className={[
-                  "rounded-xl border border-border bg-card p-3 text-left outline-none transition hover:-translate-y-0.5 hover:border-ring/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+                  "rounded-xl border border-border bg-card p-3",
                   getCalendarTypeClasses(planType),
-                  selectedDate === dayISO ? "border-ring" : "",
+                  hasShift ? "border-destructive/60 bg-destructive/5" : "",
+                  selectedDate === dayISO ? "border-ring ring-1 ring-ring/30" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
-                <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">{WEEKDAY_LABELS[index]}</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{formatDateBR(day)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Planejado: {TYPE_LABELS[planType]}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {dayLogs.length ? `${dayLogs.length} sessão(ões) · ${totalMinutes} min` : "Sem registros"}
-                </p>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectedDateChange(dayISO)}
+                  className="w-full text-left outline-none transition hover:-translate-y-0.5 hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring/30"
+                >
+                  <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">{WEEKDAY_LABELS_WORKOUT[index]}</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{formatDateBR(day)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Planejado: {TYPE_LABELS[planType]}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {dayLogs.length ? `${dayLogs.length} sessão(ões) · ${totalMinutes} min` : "Sem registros"}
+                  </p>
+                </button>
+
+                <div className="mt-2 space-y-1.5">
+                  <label className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+                    Plano do dia
+                  </label>
+                  <Select
+                    value={planType}
+                    onValueChange={(value) => {
+                      void onDayPlanChange(index, value as PlannedType)
+                    }}
+                  >
+                    <SelectTrigger
+                      className="h-9 w-full border-border bg-background text-foreground"
+                      disabled={isSavingRoutine}
+                    >
+                      <SelectValue placeholder="Selecione o plano">
+                        {TYPE_LABELS[planType]}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dayPlanOptions.map((option) => (
+                        <SelectItem key={`${dayISO}-${option}`} value={option}>
+                          {TYPE_LABELS[option]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             )
           })}
         </div>
@@ -172,7 +250,7 @@ export function WeeklyLogsCard({
               <p className="text-sm text-destructive">{logsErrorMessage}</p>
             ) : !selectedLogs.length ? (
               <p className="text-sm text-muted-foreground">
-                Sem registros em {selectedDate ? formatISOToBR(selectedDate) : "-"}. Use os formulários para salvar.
+                Sem registros em {selectedDate ? formatISOToBR(selectedDate) : "-"}. Use o formulário do dia para salvar.
               </p>
             ) : (
               <div className="space-y-3">

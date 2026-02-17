@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   addRecommendationIfMissing,
+  getCachedExerciseCatalog,
   getAllSessionsWithSets,
   getLastSessionByWorkoutType,
   getRecommendations,
   getRecentSessionsByWorkoutType,
   getSessionsByDateRange,
+  replaceExerciseCatalogCache,
   getSetting,
   saveSessionWithSets,
   setSetting,
@@ -14,16 +16,24 @@ import {
   type SaveSessionInput,
 } from "@/lib/training-db"
 import type {
+  AppSettingKey,
   RecommendationStatus,
   SplitType,
   WorkoutType,
 } from "@/lib/training-types"
+import type { ExerciseCatalogItem } from "@/features/training/types"
+import {
+  toCatalogCacheEntry,
+  toCatalogItem,
+} from "@/features/training/exercise-catalog"
 import { buildProgressionSuggestion } from "@/features/training/rpe-utils"
 import { scheduleSync } from "@/lib/sync"
+import { supabase } from "@/lib/supabase"
 
 const SESSIONS_QUERY_KEY = ["training-sessions"] as const
 const SETTINGS_QUERY_KEY = ["app-settings"] as const
 const RECOMMENDATIONS_QUERY_KEY = ["recommendations"] as const
+const EXERCISE_CATALOG_QUERY_KEY = ["exercise-catalog"] as const
 
 export function useWeekSessionsQuery(startDateISO: string | undefined, endDateISO: string | undefined) {
   return useQuery({
@@ -50,6 +60,37 @@ export function useLastSessionQuery(workoutType: WorkoutType, splitType: SplitTy
   return useQuery({
     queryKey: [...SESSIONS_QUERY_KEY, "last", splitType, workoutType],
     queryFn: async () => getLastSessionByWorkoutType(workoutType, splitType),
+  })
+}
+
+export function useExerciseCatalogQuery() {
+  return useQuery({
+    queryKey: EXERCISE_CATALOG_QUERY_KEY,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<ExerciseCatalogItem[]> => {
+      const cachedRows = await getCachedExerciseCatalog()
+      const cachedItems = cachedRows
+        .map((item) => toCatalogItem(item))
+        .filter((item): item is ExerciseCatalogItem => item !== null && item.isActive)
+
+      const { data, error } = await supabase
+        .from("exercise_catalog")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true })
+
+      if (error || !data) {
+        return cachedItems
+      }
+
+      const cacheRows = data.map((row) => toCatalogCacheEntry(row))
+      await replaceExerciseCatalogCache(cacheRows)
+
+      return cacheRows
+        .map((item) => toCatalogItem(item))
+        .filter((item): item is ExerciseCatalogItem => item !== null && item.isActive)
+    },
   })
 }
 
@@ -93,7 +134,7 @@ export function useDeleteSessionMutation() {
   })
 }
 
-export function useAppSettingQuery(key: "active-split" | "theme-preference") {
+export function useAppSettingQuery(key: AppSettingKey) {
   return useQuery({
     queryKey: [...SETTINGS_QUERY_KEY, key],
     queryFn: async () => getSetting(key),
@@ -104,7 +145,7 @@ export function useSetAppSettingMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (payload: { key: "active-split" | "theme-preference"; value: string }) => {
+    mutationFn: async (payload: { key: AppSettingKey; value: string }) => {
       await setSetting(payload.key, payload.value)
     },
     onSuccess: async (_, variables) => {
