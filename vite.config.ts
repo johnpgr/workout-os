@@ -13,7 +13,14 @@ const githubPagesBase =
 
 export default defineConfig({
   base: githubPagesBase,
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react({
+      babel: {
+        plugins: [["babel-plugin-react-compiler"]],
+      },
+    }),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -21,5 +28,14 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("/@js-temporal/polyfill/")) {
+            return "temporal-polyfill"
+          }
+        },
+      },
+    },
   },
 })
