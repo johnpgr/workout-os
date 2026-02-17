@@ -38,7 +38,7 @@ function TodoList({ todos, filter }) {
   }, [todos, filter]);
 }
 
-// GOOD: Filter during render (memoize if expensive)
+// GOOD: Filter during render (only memoize manually when React Compiler is not enabled)
 function TodoList({ todos, filter }) {
   const visibleTodos = useMemo(
     () => getFilteredTodos(todos, filter),

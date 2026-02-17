@@ -2,6 +2,10 @@
 
 Strategies for optimizing React Hook Form performance.
 
+> React Compiler policy: if React Compiler is enabled, avoid manual memoization
+> (`useMemo`, `useCallback`, `React.memo`) unless profiling confirms a concrete
+> bottleneck.
+
 ---
 
 ## Form Validation Modes
@@ -184,7 +188,8 @@ const FieldItem = React.memo(({ field, index, register, remove }) => (
   </div>
 ))
 
-// Use memoized component
+// If React Compiler is enabled, plain component extraction is usually enough.
+// Otherwise, keep React.memo for manual memoization.
 {fields.map((field, index) => (
   <FieldItem
     key={field.id}

@@ -19,6 +19,13 @@ boolean prop proliferation by using compound components, lifting state, and
 composing internals. These patterns make codebases easier for both humans and AI
 agents to work with as they scale.
 
+## React Compiler Memoization Policy
+
+If React Compiler is enabled in the project, avoid adding manual memoization
+(`useMemo`, `useCallback`, `memo`) for routine render optimization. Compose
+components first, then add manual memoization only when there is a concrete,
+measured need.
+
 ## When to Apply
 
 Reference these guidelines when:

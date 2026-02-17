@@ -13,6 +13,12 @@ user-invocable: true
 **Last Verified**: 2026-01-20
 **Latest Versions**: react-hook-form@7.71.1, zod@4.3.5, @hookform/resolvers@5.2.2
 
+## React Compiler Memoization Policy
+
+If React Compiler is enabled in the project, avoid adding manual memoization
+(`useMemo`, `useCallback`, `React.memo`) for form render optimizations unless a
+case requires manual control for correctness. Prefer plain code first.
+
 ---
 
 ## Quick Start
@@ -225,6 +231,8 @@ import { useForm, Form } from "react-hook-form";
 - Use `register` (uncontrolled) over `Controller` (controlled) for standard inputs
 - Use `watch('email')` not `watch()` (isolates re-renders to specific fields)
 - `shouldUnregister: true` for multi-step forms (clears data on unmount)
+- With React Compiler enabled, skip manual memo wrappers unless profiling shows
+  a concrete need.
 
 ### Large Forms (300+ Fields)
 

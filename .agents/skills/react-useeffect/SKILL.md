@@ -7,12 +7,18 @@ description: React useEffect best practices from official docs. Use when writing
 
 Effects are an **escape hatch** from React. They let you synchronize with external systems. If there is no external system involved, you shouldn't need an Effect.
 
+## React Compiler Memoization Policy
+
+If React Compiler is enabled in the project, do not add manual memoization
+(`useMemo`, `useCallback`, `memo`) by default. The compiler already applies
+memoization-oriented render optimizations.
+
 ## Quick Reference
 
 | Situation | DON'T | DO |
 |-----------|-------|-----|
 | Derived state from props/state | `useState` + `useEffect` | Calculate during render |
-| Expensive calculations | `useEffect` to cache | `useMemo` |
+| Expensive calculations | `useEffect` to cache | Compute directly; if needed, use `useMemo` only when React Compiler is not enabled |
 | Reset state on prop change | `useEffect` with `setState` | `key` prop |
 | User event responses | `useEffect` watching state | Event handler directly |
 | Notify parent of changes | `useEffect` calling `onChange` | Call in event handler |
@@ -42,7 +48,7 @@ Need to respond to something?
 │   └── Use EFFECT (external sync, analytics)
 ├── Props/state changed and need derived value?
 │   └── CALCULATE DURING RENDER
-│       └── Expensive? Use useMemo
+│       └── Expensive? Use `useMemo` only when React Compiler is not enabled
 └── Need to reset state when prop changes?
     └── Use KEY PROP on component
 ```
@@ -50,4 +56,5 @@ Need to respond to something?
 ## Detailed Guidance
 
 - [Anti-Patterns](./anti-patterns.md) - Common mistakes with fixes
-- [Better Alternatives](./alternatives.md) - useMemo, key prop, lifting state, useSyncExternalStore
+- [Better Alternatives](./alternatives.md) - compiler-first derived values,
+  key prop, lifting state, useSyncExternalStore

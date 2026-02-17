@@ -7,7 +7,8 @@ tags: javascript, regexp, optimization, memoization
 
 ## Hoist RegExp Creation
 
-Don't create RegExp inside render. Hoist to module scope or memoize with `useMemo()`.
+Don't create RegExp inside render. Hoist to module scope, and only use manual
+`useMemo()` when React Compiler is not enabled.
 
 **Incorrect (new RegExp every render):**
 
@@ -19,7 +20,7 @@ function Highlighter({ text, query }: Props) {
 }
 ```
 
-**Correct (memoize or hoist):**
+**Correct (hoist preferred, memoize only when needed):**
 
 ```tsx
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -33,6 +34,9 @@ function Highlighter({ text, query }: Props) {
   return <>{parts.map((part, i) => ...)}</>
 }
 ```
+
+**Note:** With React Compiler enabled, prefer plain code or hoisting first;
+manual `useMemo` is usually unnecessary.
 
 **Warning (global regex has mutable state):**
 

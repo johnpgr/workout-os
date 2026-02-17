@@ -26,7 +26,7 @@ RSC→client serialization deduplicates by object reference, not value. Same ref
 
 // Client: transform there
 'use client'
-const sorted = useMemo(() => [...usernames].sort(), [usernames])
+const sorted = usernames.toSorted()
 ```
 
 **Nested deduplication behavior:**
@@ -63,3 +63,5 @@ users={[{id:1},{id:2}]} sorted={users.toSorted()} // sends 2 arrays + 2 unique o
 ```
 
 **Exception:** Pass derived data when transformation is expensive or client doesn't need original.
+If React Compiler is not enabled and client transforms are expensive, manual
+`useMemo` can be used.

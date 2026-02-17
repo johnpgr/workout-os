@@ -9,6 +9,10 @@ January 2026
 > generating, or refactoring React and Next.js codebases. Humans  
 > may also find it useful, but guidance here is optimized for automation  
 > and consistency by AI-assisted workflows.
+>
+> **React Compiler policy:** If React Compiler is enabled, do not add manual
+> memoization (`useMemo`, `useCallback`, `memo`) unless correctness or measured
+> profiling data justifies it.
 
 ---
 
@@ -704,7 +708,7 @@ RSC→client serialization deduplicates by object reference, not value. Same ref
 
 // Client: transform there
 'use client'
-const sorted = useMemo(() => [...usernames].sort(), [usernames])
+const sorted = usernames.toSorted()
 ```
 
 **Nested deduplication behavior:**
@@ -2612,7 +2616,8 @@ function validateUsers(users: User[]) {
 
 **Impact: LOW-MEDIUM (avoids recreation)**
 
-Don't create RegExp inside render. Hoist to module scope or memoize with `useMemo()`.
+Don't create RegExp inside render. Hoist to module scope, and only use manual
+`useMemo()` when React Compiler is not enabled.
 
 **Incorrect: new RegExp every render**
 

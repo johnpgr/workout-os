@@ -7,6 +7,12 @@ description: Implement TanStack React Query server-side rendering with prefetchi
 
 Implement SSR in this order to keep behavior reliable and cache-friendly.
 
+## React Compiler Memoization Policy
+
+If React Compiler is enabled in the project, avoid adding manual memoization
+(`useMemo`, `useCallback`, `memo`) for routine render optimization. Only add
+manual memoization when correctness or a measured bottleneck requires it.
+
 ## Workflow
 1. Define a shared query module with `queryKey`, `queryFn`, and cache policy (`staleTime`, optionally `gcTime`).
 2. Reuse the same query options on server and client to prevent hydration misses.

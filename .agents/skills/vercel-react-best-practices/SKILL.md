@@ -11,6 +11,12 @@ metadata:
 
 Comprehensive performance optimization guide for React and Next.js applications, maintained by Vercel. Contains 57 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.
 
+## React Compiler Memoization Policy
+
+If React Compiler is enabled in the project, treat manual memoization
+(`useMemo`, `useCallback`, `memo`) as unnecessary by default. Keep manual
+memoization only for correctness constraints or measured hotspots.
+
 ## When to Apply
 
 Reference these guidelines when:
@@ -71,7 +77,8 @@ Reference these guidelines when:
 ### 5. Re-render Optimization (MEDIUM)
 
 - `rerender-defer-reads` - Don't subscribe to state only used in callbacks
-- `rerender-memo` - Extract expensive work into memoized components
+- `rerender-memo` - Extract expensive work into separate components; prefer
+  compiler-driven memoization when available
 - `rerender-memo-with-default-value` - Hoist default non-primitive props
 - `rerender-dependencies` - Use primitive dependencies in effects
 - `rerender-derived-state` - Subscribe to derived booleans, not raw values

@@ -7,6 +7,12 @@ description: Master modern React state management with Redux Toolkit, Zustand, J
 
 Comprehensive guide to modern React state management patterns, from local component state to global stores and server state synchronization.
 
+## React Compiler Memoization Policy
+
+If React Compiler is enabled in the project, prefer plain derived calculations
+and callbacks first. Avoid adding manual memoization (`useMemo`, `useCallback`,
+`memo`) unless there is a correctness reason or a confirmed performance issue.
+
 ## When to Use This Skill
 
 - Setting up global state management in a React app

@@ -21,7 +21,9 @@ function Form() {
 
 ## 2. useMemo for Expensive Calculations
 
-When computation is expensive, memoize it:
+When computation is expensive, prefer React Compiler auto-memoization first.
+Use manual `useMemo` only when React Compiler is not enabled or profiling shows
+it is still needed:
 
 ```tsx
 import { useMemo } from 'react';
@@ -42,7 +44,7 @@ console.timeEnd('filter');
 // If > 1ms, consider memoizing
 ```
 
-**Note**: React Compiler can auto-memoize, reducing manual useMemo needs.
+**Note**: With React Compiler enabled, manual `useMemo` is usually unnecessary.
 
 ---
 
@@ -249,7 +251,7 @@ function SearchResults({ query }) {
 | Need | Solution |
 |------|----------|
 | Value from props/state | Calculate during render |
-| Expensive calculation | `useMemo` |
+| Expensive calculation | Compute directly; use `useMemo` only when React Compiler is not enabled |
 | Reset all state on prop change | `key` prop |
 | Respond to user action | Event handler |
 | Sync with external system | `useEffect` with cleanup |
