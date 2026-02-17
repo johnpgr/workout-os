@@ -8,28 +8,20 @@ import { WeeklyLogsCard } from "@/features/training/components/weekly-logs-card"
 import { WorkoutsSection } from "@/features/training/components/workouts-section"
 import { THEME_STORAGE_KEY } from "@/features/training/constants"
 import {
-  createInitialForms,
   getISOWeekInputValue,
   getInitialThemePreference,
   getWeekDates,
   parseISODate,
-  resetRows,
   toISODateString,
 } from "@/features/training/helpers"
-import type {
-  ExerciseInputRow,
-  FormStatus,
-  ThemePreference,
-  WeekMode,
-  WorkoutFormsState,
-  WorkoutPlan,
-} from "@/features/training/types"
-import { Temporal, getCurrentDate } from "@/lib/temporal"
 import {
-  type SessionExerciseLog,
-  type SessionLog,
-  type WorkoutType,
-} from "@/lib/training-types"
+  useAddLogMutation,
+  useDeleteLogMutation,
+  useWeekLogsQuery,
+} from "@/features/training/queries"
+import type { ThemePreference, WeekMode } from "@/features/training/types"
+import { getCurrentDate } from "@/lib/temporal"
+import type { SessionLog } from "@/lib/training-types"
 
 function App() {
   const todayISO = toISODateString(getCurrentDate())
@@ -38,18 +30,22 @@ function App() {
     getISOWeekInputValue(getCurrentDate())
   )
   const [mode, setMode] = useState<WeekMode>("6")
-  const [weekLogs, setWeekLogs] = useState<SessionLog[]>([])
   const [selectedDate, setSelectedDate] = useState<string>(todayISO)
-  const [forms, setForms] = useState<WorkoutFormsState>(() =>
-    createInitialForms(todayISO)
-  )
-  const [refreshVersion, setRefreshVersion] = useState(0)
   const [themePreference, setThemePreference] =
     useState<ThemePreference>(getInitialThemePreference)
 
   const preferredDateRef = useRef<string | undefined>(undefined)
 
   const weekDates = getWeekDates(weekValue)
+  const weekDateISOValues = weekDates.map((day) => toISODateString(day))
+  const weekStartISO = weekDateISOValues[0]
+  const weekEndISO = weekDateISOValues[6]
+
+  const weekLogsQuery = useWeekLogsQuery(weekStartISO, weekEndISO)
+  const addLogMutation = useAddLogMutation()
+  const deleteLogMutation = useDeleteLogMutation()
+
+  const weekLogs = weekLogsQuery.data ?? []
 
   const logsByDate = (() => {
     const grouped = new Map<string, SessionLog[]>()
@@ -124,196 +120,41 @@ function App() {
   }, [themePreference])
 
   useEffect(() => {
-    const currentWeekDates = getWeekDates(weekValue)
-    const currentWeekDateISOValues = currentWeekDates.map((day) => toISODateString(day))
+    const currentWeekDates = getWeekDates(weekValue).map((day) => toISODateString(day))
 
-    if (!currentWeekDateISOValues.length) {
+    if (!currentWeekDates.length) {
       return
     }
 
-    let cancelled = false
+    setSelectedDate((current) => {
+      const preferred = preferredDateRef.current
+      preferredDateRef.current = undefined
 
-    const start = currentWeekDateISOValues[0]
-    const end = currentWeekDateISOValues[6]
-
-    void (async () => {
-      try {
-        const { getLogsByDateRange } = await import("@/lib/training-db")
-        const logs = await getLogsByDateRange(start, end)
-        if (cancelled) {
-          return
-        }
-
-        setWeekLogs(logs)
-        setSelectedDate((current) => {
-          const preferred = preferredDateRef.current
-          preferredDateRef.current = undefined
-
-          if (preferred && currentWeekDateISOValues.includes(preferred)) {
-            return preferred
-          }
-
-          if (currentWeekDateISOValues.includes(current)) {
-            return current
-          }
-
-          return currentWeekDateISOValues[0] ?? ""
-        })
-      } catch (error) {
-        if (!cancelled) {
-          console.error(error)
-        }
+      if (preferred && currentWeekDates.includes(preferred)) {
+        return preferred
       }
-    })()
 
-    return () => {
-      cancelled = true
-    }
-  }, [refreshVersion, weekValue])
-
-  function setFormStatus(workoutType: WorkoutType, status: FormStatus) {
-    setForms((previous) => ({
-      ...previous,
-      [workoutType]: {
-        ...previous[workoutType],
-        status,
-      },
-    }))
-  }
-
-  function updateFormField(
-    workoutType: WorkoutType,
-    field: "date" | "duration" | "notes",
-    value: string
-  ) {
-    setForms((previous) => ({
-      ...previous,
-      [workoutType]: {
-        ...previous[workoutType],
-        [field]: value,
-      },
-    }))
-  }
-
-  function updateExerciseField(
-    workoutType: WorkoutType,
-    rowIndex: number,
-    field: keyof ExerciseInputRow,
-    value: string
-  ) {
-    setForms((previous) => {
-      const nextRows = previous[workoutType].rows.map((row, index) => {
-        if (index !== rowIndex) {
-          return row
-        }
-
-        return {
-          ...row,
-          [field]: value,
-        }
-      })
-
-      return {
-        ...previous,
-        [workoutType]: {
-          ...previous[workoutType],
-          rows: nextRows,
-        },
+      if (currentWeekDates.includes(current)) {
+        return current
       }
+
+      return currentWeekDates[0] ?? ""
     })
-  }
+  }, [weekValue])
 
-  async function handleSaveLog(workout: WorkoutPlan) {
-    const form = forms[workout.type]
-    const durationMin = Number(form.duration)
+  async function handleSaveLog(payload: Omit<SessionLog, "id">) {
+    await addLogMutation.mutateAsync(payload)
 
-    if (!form.date) {
-      setFormStatus(workout.type, {
-        kind: "error",
-        message: "Informe a data do treino.",
-      })
+    preferredDateRef.current = payload.date
+    const parsedDate = parseISODate(payload.date)
+    const savedWeek = parsedDate ? getISOWeekInputValue(parsedDate) : weekValue
+
+    if (savedWeek !== weekValue) {
+      setWeekValue(savedWeek)
       return
     }
 
-    if (!Number.isFinite(durationMin) || durationMin <= 0) {
-      setFormStatus(workout.type, {
-        kind: "error",
-        message: "Informe a duração da sessão em minutos.",
-      })
-      return
-    }
-
-    const exercises: SessionExerciseLog[] = form.rows
-      .map((row, index) => {
-        const sets = Number(row.sets || 0)
-        const reps = Number(row.reps || 0)
-        const weight = Number(row.weight || 0)
-
-        return {
-          name: workout.exercises[index].name,
-          sets,
-          reps,
-          weight,
-        }
-      })
-      .filter((entry) => entry.sets > 0 || entry.reps > 0 || entry.weight > 0)
-
-    const payload: Omit<SessionLog, "id"> = {
-      workoutType: workout.type,
-      workoutLabel: workout.label,
-      date: form.date,
-      durationMin,
-      notes: form.notes.trim(),
-      exercises,
-      createdAt: Temporal.Now.instant().toString(),
-    }
-
-    try {
-      const { addLog } = await import("@/lib/training-db")
-      await addLog(payload)
-
-      setForms((previous) => ({
-        ...previous,
-        [workout.type]: {
-          ...previous[workout.type],
-          duration: "",
-          notes: "",
-          rows: resetRows(previous[workout.type].rows.length),
-          status: {
-            kind: "success",
-            message: "Treino salvo com sucesso no IndexedDB.",
-          },
-        },
-      }))
-
-      preferredDateRef.current = form.date
-      const parsedDate = parseISODate(form.date)
-      const savedWeek = parsedDate ? getISOWeekInputValue(parsedDate) : weekValue
-      if (savedWeek !== weekValue) {
-        setWeekValue(savedWeek)
-      } else {
-        setRefreshVersion((previous) => previous + 1)
-      }
-    } catch (error) {
-      console.error(error)
-      setFormStatus(workout.type, {
-        kind: "error",
-        message: "Não foi possível salvar no IndexedDB.",
-      })
-    }
-  }
-
-  function handleClearForm(workoutType: WorkoutType) {
-    setForms((previous) => ({
-      ...previous,
-      [workoutType]: {
-        ...previous[workoutType],
-        duration: "",
-        notes: "",
-        rows: resetRows(previous[workoutType].rows.length),
-        status: { kind: "success", message: "Campos limpos." },
-      },
-    }))
+    setSelectedDate(payload.date)
   }
 
   async function handleDeleteLog(id: number | undefined) {
@@ -326,14 +167,16 @@ function App() {
     }
 
     try {
-      const { deleteLog } = await import("@/lib/training-db")
-      await deleteLog(id)
-      setRefreshVersion((previous) => previous + 1)
+      await deleteLogMutation.mutateAsync(id)
     } catch (error) {
       console.error(error)
       window.alert("Não foi possível excluir o log.")
     }
   }
+
+  const logsErrorMessage = weekLogsQuery.error
+    ? "Não foi possível carregar os registros desta semana."
+    : null
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
@@ -353,6 +196,9 @@ function App() {
           selectedLogs={selectedLogs}
           summary={summary}
           logsByDate={logsByDate}
+          isLogsLoading={weekLogsQuery.isPending}
+          logsErrorMessage={logsErrorMessage}
+          isDeletingLog={deleteLogMutation.isPending}
           onWeekValueChange={setWeekValue}
           onModeChange={setMode}
           onSelectedDateChange={setSelectedDate}
@@ -360,11 +206,9 @@ function App() {
         />
 
         <WorkoutsSection
-          forms={forms}
-          onUpdateFormField={updateFormField}
-          onUpdateExerciseField={updateExerciseField}
+          defaultDate={selectedDate || todayISO}
+          isSaving={addLogMutation.isPending}
           onSaveLog={handleSaveLog}
-          onClearForm={handleClearForm}
         />
 
         <TipsSection />

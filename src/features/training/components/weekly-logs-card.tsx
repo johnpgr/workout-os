@@ -17,6 +17,9 @@ interface WeeklyLogsCardProps {
   selectedLogs: SessionLog[]
   summary: WeekSummary
   logsByDate: Map<string, SessionLog[]>
+  isLogsLoading: boolean
+  logsErrorMessage: string | null
+  isDeletingLog: boolean
   onWeekValueChange: (value: string) => void
   onModeChange: (value: WeekMode) => void
   onSelectedDateChange: (value: string) => void
@@ -31,6 +34,9 @@ export function WeeklyLogsCard({
   selectedLogs,
   summary,
   logsByDate,
+  isLogsLoading,
+  logsErrorMessage,
+  isDeletingLog,
   onWeekValueChange,
   onModeChange,
   onSelectedDateChange,
@@ -125,7 +131,11 @@ export function WeeklyLogsCard({
 
         <Card className="bg-card text-foreground ring-border">
           <CardContent className="py-4">
-            {!selectedLogs.length ? (
+            {isLogsLoading ? (
+              <p className="text-sm text-muted-foreground">Carregando registros da semana...</p>
+            ) : logsErrorMessage ? (
+              <p className="text-sm text-destructive">{logsErrorMessage}</p>
+            ) : !selectedLogs.length ? (
               <p className="text-sm text-muted-foreground">
                 Sem registros em {selectedDate ? formatISOToBR(selectedDate) : "-"}. Use os formulários abaixo para
                 salvar treinos.
@@ -141,6 +151,7 @@ export function WeeklyLogsCard({
                         <Button
                           variant="destructive"
                           size="sm"
+                          disabled={isDeletingLog}
                           onClick={() => {
                             void onDeleteLog(log.id)
                           }}

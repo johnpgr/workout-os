@@ -1,6 +1,6 @@
 import { formatDateDayMonth, formatDateShort, getWeekDatesFromInput, getWeekInputValue, parseDate, type Temporal } from "@/lib/temporal"
-import { THEME_STORAGE_KEY, WORKOUTS } from "@/features/training/constants"
-import type { PlannedType, ThemePreference, WorkoutFormsState } from "@/features/training/types"
+import { THEME_STORAGE_KEY } from "@/features/training/constants"
+import type { PlannedType, ThemePreference } from "@/features/training/types"
 
 export function getInitialThemePreference(): ThemePreference {
   if (typeof window === "undefined") {
@@ -42,36 +42,6 @@ export function parseISODate(isoDate: string): Temporal.PlainDate | null {
   } catch {
     return null
   }
-}
-
-export function createInitialForms(defaultDate: string): WorkoutFormsState {
-  return {
-    push: {
-      date: defaultDate,
-      duration: "",
-      notes: "",
-      rows: WORKOUTS[0].exercises.map(() => ({ sets: "", reps: "", weight: "" })),
-      status: null,
-    },
-    pull: {
-      date: defaultDate,
-      duration: "",
-      notes: "",
-      rows: WORKOUTS[1].exercises.map(() => ({ sets: "", reps: "", weight: "" })),
-      status: null,
-    },
-    leg: {
-      date: defaultDate,
-      duration: "",
-      notes: "",
-      rows: WORKOUTS[2].exercises.map(() => ({ sets: "", reps: "", weight: "" })),
-      status: null,
-    },
-  }
-}
-
-export function resetRows(rowsLength: number) {
-  return Array.from({ length: rowsLength }, () => ({ sets: "", reps: "", weight: "" }))
 }
 
 export function getCalendarTypeClasses(type: PlannedType): string {

@@ -34,6 +34,18 @@ export default defineConfig({
           if (id.includes("/@js-temporal/polyfill/")) {
             return "temporal-polyfill"
           }
+
+          if (id.includes("/@tanstack/react-query/")) {
+            return "react-query"
+          }
+
+          if (
+            id.includes("/react-hook-form/") ||
+            id.includes("/@hookform/resolvers/") ||
+            id.includes("/zod/")
+          ) {
+            return "forms"
+          }
         },
       },
     },
