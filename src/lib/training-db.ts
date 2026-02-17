@@ -1,4 +1,5 @@
 import Dexie, { type Table } from "dexie"
+import { v7 as uuidv7 } from "uuid"
 import { Temporal } from "@/lib/temporal"
 import type {
   AppSetting,
@@ -109,44 +110,17 @@ class TrainingLogsDatabase extends Dexie {
   syncState!: Table<SyncStateRecord, string>
 
   constructor() {
-    super("treinos-v2-training")
+    super("treinos-training")
 
     this.version(1).stores({
-      sessions: "&id, date, splitType, workoutType, updatedAt, deletedAt",
-      exercise_sets: "&id, sessionId, date, splitType, workoutType, exerciseName, updatedAt, deletedAt",
-      readiness_logs: "&id, date, updatedAt, deletedAt",
-      weight_logs: "&id, date, updatedAt, deletedAt",
-      app_settings: "&id, &key, updatedAt",
-      recommendations: "&id, date, status, kind, workoutType, updatedAt, deletedAt",
+      sessions: "&id, date, splitType, workoutType, updatedAt, deletedAt, isDirty",
+      exercise_sets: "&id, sessionId, date, splitType, workoutType, exerciseName, updatedAt, deletedAt, isDirty",
+      readiness_logs: "&id, date, updatedAt, deletedAt, isDirty",
+      weight_logs: "&id, date, updatedAt, deletedAt, isDirty",
+      app_settings: "&id, &key, updatedAt, isDirty",
+      recommendations: "&id, date, status, kind, workoutType, updatedAt, deletedAt, isDirty",
+      sync_state: "&key, updatedAt",
     })
-
-    this.version(2)
-      .stores({
-        sessions: "&id, date, splitType, workoutType, updatedAt, deletedAt, isDirty",
-        exercise_sets: "&id, sessionId, date, splitType, workoutType, exerciseName, updatedAt, deletedAt, isDirty",
-        readiness_logs: "&id, date, updatedAt, deletedAt, isDirty",
-        weight_logs: "&id, date, updatedAt, deletedAt, isDirty",
-        app_settings: "&id, &key, updatedAt, isDirty",
-        recommendations: "&id, date, status, kind, workoutType, updatedAt, deletedAt, isDirty",
-        sync_state: "&key, updatedAt",
-      })
-      .upgrade(async (transaction) => {
-        const migrateRow = (row: Record<string, unknown>) => {
-          row.isDirty = true
-          row.lastSyncedAt = typeof row.lastSyncedAt === "string" ? row.lastSyncedAt : null
-          row.serverUpdatedAt = typeof row.serverUpdatedAt === "string" ? row.serverUpdatedAt : null
-          if (typeof row.ownerUserId !== "string") {
-            row.ownerUserId = undefined
-          }
-        }
-
-        await transaction.table("sessions").toCollection().modify(migrateRow)
-        await transaction.table("exercise_sets").toCollection().modify(migrateRow)
-        await transaction.table("readiness_logs").toCollection().modify(migrateRow)
-        await transaction.table("weight_logs").toCollection().modify(migrateRow)
-        await transaction.table("app_settings").toCollection().modify(migrateRow)
-        await transaction.table("recommendations").toCollection().modify(migrateRow)
-      })
 
     this.sessions = this.table("sessions")
     this.exerciseSets = this.table("exercise_sets")
@@ -165,10 +139,7 @@ function nowISO(): string {
 }
 
 function createId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID()
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  return uuidv7()
 }
 
 function createSyncMeta(overrides?: Partial<SyncMetadata>): SyncMetadata {
@@ -556,7 +527,7 @@ export async function setSetting(key: AppSetting["key"], value: string): Promise
   }
 
   const setting: AppSetting = {
-    ...createSyncMeta({ id: `app-setting:${key}` }),
+    ...createSyncMeta(),
     key,
     value,
   }
